@@ -29,9 +29,9 @@ export default function Home() {
 
     try {
       await login(employeeId);
-      // Navigation will be handled automatically by the root layout
+      
     } catch {
-      alert('Login Failed: ' + 'Employee ID not found. Please try again.');
+      alert('Login Failed: Employee ID not found. Please try again.');
     }
   };
 
@@ -46,10 +46,12 @@ export default function Home() {
           <Header />
         
         <View style={{ padding: 28, justifyContent: 'center', flex: 1, gap: 28 }}>
-          {/* Heading */}
+       
+       
           <View style={{ gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              {/* @ts-ignore */}
+         
+         
               <Hand size={36} color={Colors.light.background} />
               <Text style={{ fontSize: 36, fontWeight: 'bold', color: Colors.light.background, letterSpacing: -0.5 }}>
                 Welcome Back!
@@ -64,7 +66,7 @@ export default function Home() {
           <View style={{ gap: 18 }}>
             <View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                {/* @ts-ignore */}
+                
                 <IdCard size={18} color={Colors.light.background} />
                 <Text style={{ fontSize: 14, fontWeight: '700', color: Colors.light.background }}>
                   Employee ID
@@ -93,13 +95,17 @@ export default function Home() {
                 }}
               />
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                {/* @ts-ignore */}
+               
                 <Lightbulb size={14} color='rgba(232, 244, 255, 0.8)' />
                 <Text style={{ fontSize: 12, color: 'rgba(232, 244, 255, 0.8)', fontWeight: '500' }}>
                   Try: EMP001, EMP002, or ADM001
                 </Text>
               </View>
             </View>
+
+
+
+
 
             {/* Login Button */}
             <TouchableOpacity
@@ -139,6 +145,10 @@ export default function Home() {
               )}
             </TouchableOpacity>
 
+
+
+
+
             {/* Sign Up Link */}
             <TouchableOpacity
               onPress={() => router.push('/(Auth)/SignUpScreen' as any)}
@@ -166,6 +176,10 @@ export default function Home() {
               </View>
             </TouchableOpacity>
           </View>
+
+
+
+
 
           {/* Footer */}
           <View style={{ alignItems: 'center', gap: 4 }}>

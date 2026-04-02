@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Check, X, MapPin, LogOut, IdCard, Mail, Building2, BarChart3, Users, Calendar, AlertCircle, Smartphone, User } from 'lucide-react-native';
+import { Check, IdCard, Mail, Building2, User } from 'lucide-react-native';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/theme';
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Users size={14} color={Colors.light.icon} />
+
                     <Text style={{ color: Colors.light.icon, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>
                       TOTAL
                     </Text>
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <X size={14} color={Colors.light.danger} />
+
                     <Text style={{ color: Colors.light.danger, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>
                       ABSENT
                     </Text>
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <BarChart3 size={14} color={Colors.light.icon} />
+
                     <Text style={{ color: Colors.light.icon, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>
                       AVERAGE %
                     </Text>
@@ -281,7 +281,7 @@ export default function AdminDashboard() {
             {/* Generate QR Codes */}
             <View style={{ backgroundColor: Colors.light.cardBackground, borderRadius: 12, padding: 20, gap: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Smartphone size={20} color={Colors.light.text} />
+
                 <Text style={{ fontSize: 18, fontWeight: 'bold', color: Colors.light.text }}>
                   Generate QR Codes
                 </Text>
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
                   elevation: 1,
                 }}
               >
-                <MapPin size={34} color={Colors.light.success} style={{ marginBottom: 10 }} />
+
                 <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.light.success }}>
                   Arrival QR Code
                 </Text>
@@ -331,7 +331,7 @@ export default function AdminDashboard() {
                   elevation: 1,
                 }}
               >
-                <LogOut size={34} color={Colors.light.warning} style={{ marginBottom: 10 }} />
+
                 <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.light.warning }}>
                   Departure QR Code
                 </Text>
@@ -356,7 +356,7 @@ export default function AdminDashboard() {
                   elevation: 1,
                 }}
               >
-                <Users size={34} color={Colors.light.buttonBackground} style={{ marginBottom: 10 }} />
+
                 <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.light.buttonBackground }}>
                   Registration QR Code
                 </Text>
@@ -419,7 +419,7 @@ export default function AdminDashboard() {
                     </Text>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Calendar size={14} color={Colors.light.icon} />
+
                     <Text style={{ fontSize: 12, color: Colors.light.icon, fontWeight: '600' }}>
                       {emp.totalDaysWorked} days
                     </Text>
@@ -459,7 +459,7 @@ export default function AdminDashboard() {
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                  <Calendar size={18} color={Colors.light.text} />
+
                   <Text style={{ fontSize: 15, fontWeight: 'bold', color: Colors.light.text }}>
                     {report.date}
                   </Text>
@@ -482,7 +482,7 @@ export default function AdminDashboard() {
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <X size={14} color={Colors.light.danger} />
+
                       <Text style={{ color: Colors.light.danger, fontSize: 12, fontWeight: '600' }}>Absent:</Text>
                     </View>
                     <Text style={{ fontWeight: '700', color: Colors.light.danger, fontSize: 13 }}>
@@ -491,7 +491,7 @@ export default function AdminDashboard() {
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <AlertCircle size={14} color={Colors.light.warning} />
+
                       <Text style={{ color: Colors.light.warning, fontSize: 12, fontWeight: '600' }}>Late:</Text>
                     </View>
                     <Text style={{ fontWeight: '700', color: Colors.light.warning, fontSize: 13 }}>{report.lateArrivals}</Text>
@@ -605,9 +605,7 @@ export default function AdminDashboard() {
             }}
           >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                {qrType === 'arrival' && <MapPin size={24} color={Colors.light.text} />}
-                {qrType === 'departure' && <LogOut size={24} color={Colors.light.text} />}
-                {qrType === 'registration' && <Users size={24} color={Colors.light.text} />}
+
                 <Text style={{ fontSize: 19, fontWeight: 'bold', color: Colors.light.text }}>
                   {qrType === 'arrival'
                     ? 'Arrival QR Code'

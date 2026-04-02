@@ -14,15 +14,7 @@ function RootLayoutContent() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        {user.userId ? (
-          // Dashboard Stack - Shown when user is authenticated
-          <Stack.Screen name="(DashBoards)" options={{ headerShown: false }} />
-        ) : (
-          // Auth Stack - Shown when user is not authenticated
-          <Stack.Screen name="(Auth)" options={{ headerShown: false }} />
-        )}
-      </Stack>
+      <Stack screenOptions={{ headerShown: false }} />
       <StatusBar style="auto" />
     </ThemeProvider>
   );
