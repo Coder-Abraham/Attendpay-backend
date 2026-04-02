@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Lock, PenTool, Key, CheckCircle, User, Mail, Check, Building2, Clipboard } from 'lucide-react-native';
 import Header from '@/components/Header';
 import { BG_IMAGE, Colors } from '@/constants/theme';
 
@@ -83,8 +84,8 @@ export default function SignUpScreen() {
     fontSize: 15,
     marginBottom: 14,
     color: Colors.light.text,
-    fontWeight: '500',
-  };
+    fontWeight: 500 as const,
+  } as const;
 
   return (
     <ImageBackground
@@ -92,11 +93,12 @@ export default function SignUpScreen() {
       resizeMode="cover"
       style={{ flex: 1 }}
     >
-      <SafeAreaView style={{ flex: 1, backgroundColor: 'rgba(10, 37, 64, 0.4)' }}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <Header />
+      <SafeAreaView>
+        <View style={{ flex: 1, backgroundColor: 'rgba(10, 37, 64, 0.4)' }}>
+          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <Header />
 
-        <View style={{ padding: 28 }}>
+          <View style={{ padding: 28 }}>
           {/* Progress Indicator */}
           <View style={{ marginBottom: 28, gap: 10 }}>
             <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -124,13 +126,35 @@ export default function SignUpScreen() {
 
           {/* Heading */}
           <View style={{ marginBottom: 28, gap: 8 }}>
-            <Text style={{ fontSize: 32, fontWeight: 'bold', color: Colors.light.background }}>
-              🔐 Sign Up
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {/* @ts-ignore */}
+              <Lock size={32} color={Colors.light.background} />
+              <Text style={{ fontSize: 32, fontWeight: 'bold', color: Colors.light.background }}>
+                Sign Up
+              </Text>
+            </View>
             <Text style={{ fontSize: 14, color: 'rgba(232, 244, 255, 0.9)' }}>
-              {step === 1 && '✏️ Enter your basic information'}
-              {step === 2 && '🔑 Set up your security details'}
-              {step === 3 && '✅ Review and confirm'}
+              {step === 1 && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  {/* @ts-ignore */}
+                  <PenTool size={16} color='rgba(232, 244, 255, 0.9)' />
+                  <Text style={{ fontSize: 14, color: 'rgba(232, 244, 255, 0.9)' }}>Enter your basic information</Text>
+                </View>
+              )}
+              {step === 2 && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  {/* @ts-ignore */}
+                  <Key size={16} color='rgba(232, 244, 255, 0.9)' />
+                  <Text style={{ fontSize: 14, color: 'rgba(232, 244, 255, 0.9)' }}>Set up your security details</Text>
+                </View>
+              )}
+              {step === 3 && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  {/* @ts-ignore */}
+                  <CheckCircle size={16} color='rgba(232, 244, 255, 0.9)' />
+                  <Text style={{ fontSize: 14, color: 'rgba(232, 244, 255, 0.9)' }}>Review and confirm</Text>
+                </View>
+              )}
             </Text>
           </View>
 
@@ -138,9 +162,12 @@ export default function SignUpScreen() {
           {step === 1 && (
             <View style={{ gap: 18 }}>
               <View>
-                <Text style={{ fontSize: 14, fontWeight: '700', marginBottom: 10, color: Colors.light.background }}>
-                  👤 Full Name
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <User size={18} color={Colors.light.background} />
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: Colors.light.background }}>
+                    Full Name
+                  </Text>
+                </View>
                 <TextInput
                   placeholder="John Doe"
                   value={name}
@@ -151,9 +178,12 @@ export default function SignUpScreen() {
                 />
               </View>
               <View>
-                <Text style={{ fontSize: 14, fontWeight: '700', marginBottom: 10, color: Colors.light.background }}>
-                  📧 Email Address
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <Mail size={18} color={Colors.light.background} />
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: Colors.light.background }}>
+                    Email Address
+                  </Text>
+                </View>
                 <TextInput
                   placeholder="john@company.com"
                   value={email}
@@ -171,9 +201,12 @@ export default function SignUpScreen() {
           {step === 2 && (
             <View style={{ gap: 18 }}>
               <View>
-                <Text style={{ fontSize: 14, fontWeight: '700', marginBottom: 10, color: Colors.light.background }}>
-                  🔒 Password
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <Lock size={18} color={Colors.light.background} />
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: Colors.light.background }}>
+                    Password
+                  </Text>
+                </View>
                 <TextInput
                   placeholder="At least 6 characters"
                   value={password}
@@ -185,9 +218,12 @@ export default function SignUpScreen() {
                 />
               </View>
               <View>
-                <Text style={{ fontSize: 14, fontWeight: '700', marginBottom: 10, color: Colors.light.background }}>
-                  ✔️ Confirm Password
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <Check size={18} color={Colors.light.background} />
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: Colors.light.background }}>
+                    Confirm Password
+                  </Text>
+                </View>
                 <TextInput
                   placeholder="Re-enter your password"
                   value={confirmPassword}
@@ -199,9 +235,12 @@ export default function SignUpScreen() {
                 />
               </View>
               <View>
-                <Text style={{ fontSize: 14, fontWeight: '700', marginBottom: 10, color: Colors.light.background }}>
-                  🏢 Department
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <Building2 size={18} color={Colors.light.background} />
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: Colors.light.background }}>
+                    Department
+                  </Text>
+                </View>
                 <TextInput
                   placeholder="e.g., Engineering, Sales"
                   value={department}
@@ -229,9 +268,12 @@ export default function SignUpScreen() {
                 elevation: 4,
               }}
             >
-              <Text style={{ fontSize: 18, fontWeight: 'bold', color: Colors.light.text }}>
-                📋 Review Your Information
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Clipboard size={22} color={Colors.light.text} />
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: Colors.light.text }}>
+                  Review Your Information
+                </Text>
+              </View>
               <View style={{ gap: 12, paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: Colors.light.divider }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Text style={{ color: Colors.light.icon, fontSize: 14, fontWeight: '500' }}>Name:</Text>
@@ -313,14 +355,18 @@ export default function SignUpScreen() {
                   </Text>
                 </>
               ) : (
-                <Text style={{ color: Colors.light.buttonText, fontWeight: '700', fontSize: 15 }}>
-                  {step === 3 ? '✅ Create Account' : 'Next →'}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                  {step === 3 && <CheckCircle size={18} color={Colors.light.buttonText} />}
+                  <Text style={{ color: Colors.light.buttonText, fontWeight: '700', fontSize: 15 }}>
+                    {step === 3 ? 'Create Account' : 'Next →'}
+                  </Text>
+                </View>
               )}
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
+      </View>
     </SafeAreaView>
     </ImageBackground>
   );

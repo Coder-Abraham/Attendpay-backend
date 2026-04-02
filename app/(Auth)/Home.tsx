@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Hand, IdCard, Lightbulb, Unlock, Plus } from 'lucide-react-native';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
 import { BG_IMAGE, Colors } from '@/constants/theme';
@@ -29,8 +30,8 @@ export default function Home() {
     try {
       await login(employeeId);
       // Navigation will be handled automatically by the root layout
-    } catch (error) {
-      Alert.alert('Login Failed', 'Employee ID not found. Please try again.');
+    } catch {
+      alert('Login Failed: ' + 'Employee ID not found. Please try again.');
     }
   };
 
@@ -47,9 +48,13 @@ export default function Home() {
         <View style={{ padding: 28, justifyContent: 'center', flex: 1, gap: 28 }}>
           {/* Heading */}
           <View style={{ gap: 8 }}>
-            <Text style={{ fontSize: 36, fontWeight: 'bold', color: Colors.light.background, letterSpacing: -0.5 }}>
-              👋 Welcome Back!
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {/* @ts-ignore */}
+              <Hand size={36} color={Colors.light.background} />
+              <Text style={{ fontSize: 36, fontWeight: 'bold', color: Colors.light.background, letterSpacing: -0.5 }}>
+                Welcome Back!
+              </Text>
+            </View>
             <Text style={{ fontSize: 15, color: 'rgba(232, 244, 255, 0.95)', lineHeight: 22 }}>
               Enter your Employee ID to access the attendance system
             </Text>
@@ -58,9 +63,13 @@ export default function Home() {
           {/* Input Form */}
           <View style={{ gap: 18 }}>
             <View>
-              <Text style={{ fontSize: 14, fontWeight: '700', marginBottom: 10, color: Colors.light.background }}>
-                🆔 Employee ID
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                {/* @ts-ignore */}
+                <IdCard size={18} color={Colors.light.background} />
+                <Text style={{ fontSize: 14, fontWeight: '700', color: Colors.light.background }}>
+                  Employee ID
+                </Text>
+              </View>
               <TextInput
                 placeholder="e.g., EMP001"
                 value={employeeId}
@@ -83,9 +92,13 @@ export default function Home() {
                   elevation: 2,
                 }}
               />
-              <Text style={{ fontSize: 12, color: 'rgba(232, 244, 255, 0.8)', marginTop: 8, fontWeight: '500' }}>
-                💡 Try: EMP001, EMP002, or ADM001
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                {/* @ts-ignore */}
+                <Lightbulb size={14} color='rgba(232, 244, 255, 0.8)' />
+                <Text style={{ fontSize: 12, color: 'rgba(232, 244, 255, 0.8)', fontWeight: '500' }}>
+                  Try: EMP001, EMP002, or ADM001
+                </Text>
+              </View>
             </View>
 
             {/* Login Button */}
@@ -116,11 +129,13 @@ export default function Home() {
                   </Text>
                 </>
               ) : (
-                <>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  {/* @ts-ignore */}
+                  <Unlock size={20} color={Colors.light.buttonText} />
                   <Text style={{ color: Colors.light.buttonText, fontWeight: '700', fontSize: 16 }}>
-                    🔓 Login
+                    Login
                   </Text>
-                </>
+                </View>
               )}
             </TouchableOpacity>
 
@@ -143,9 +158,12 @@ export default function Home() {
                 elevation: 2,
               }}
             >
-              <Text style={{ color: Colors.light.background, fontWeight: '700', fontSize: 16 }}>
-                ➕ Create New Account
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                <Plus size={20} fill={Colors.light.background} />
+                <Text style={{ color: Colors.light.background, fontWeight: '700', fontSize: 16 }}>
+                  Create New Account
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
 

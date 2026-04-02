@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { MapPin, Check, LogOut, X, AlertCircle, DollarSign, Calendar, Clipboard, Clock } from 'lucide-react-native';
 import Header from '@/components/Header';
 import QRScanner from '@/components/QRScanner';
 import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/theme';
-import { mockAttendanceData, mockSalaryData } from '@/utils/mockData';
+import { mockAttendanceData } from '@/utils/mockData';
 import { formatCurrency, getEmployeeSalaryDetails, calculateHoursWorked } from '@/utils/salaryUtils';
 
 export default function EmployeeDashboard() {
@@ -47,11 +48,7 @@ export default function EmployeeDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    loadEmployeeData();
-  }, []);
-
-  const loadEmployeeData = () => {
+  const loadEmployeeData = useCallback(() => {
     setLoading(true);
     try {
       // Load attendance records
@@ -61,12 +58,16 @@ export default function EmployeeDashboard() {
       // Load salary details
       const salary = getEmployeeSalaryDetails(user.userId || '');
       setSalaryDetails(salary);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to load employee data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.userId]);
+
+  useEffect(() => {
+    loadEmployeeData();
+  }, [loadEmployeeData]);
 
   const handleClockIn = () => {
     if (!showScanner) {
@@ -84,7 +85,7 @@ export default function EmployeeDashboard() {
 
   const handleScanQR = (data: string) => {
     try {
-      const qrData = JSON.parse(data);
+      JSON.parse(data); // Validate QR code format
       if (scannerMode === 'in') {
         setTodayClockIn(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }));
         Alert.alert('Success', 'Clock in recorded successfully!');
@@ -241,7 +242,7 @@ export default function EmployeeDashboard() {
                   elevation: todayClockIn ? 1 : 3,
                 }}
               >
-                <Text style={{ fontSize: 28, marginBottom: 8 }}>📍</Text>
+                <MapPin size={28} color={Colors.light.buttonText} style={{ marginBottom: 8 }} />
                 <Text style={{ color: Colors.light.buttonText, fontWeight: '700', fontSize: 13 }}>
                   {todayClockIn ? `✓ ${todayClockIn}` : 'Clock In'}
                 </Text>
@@ -264,7 +265,7 @@ export default function EmployeeDashboard() {
                   elevation: !todayClockIn || todayClockOut ? 1 : 3,
                 }}
               >
-                <Text style={{ fontSize: 28, marginBottom: 8 }}>🚪</Text>
+                <LogOut size={28} color={Colors.light.buttonText} style={{ marginBottom: 8 }} />
                 <Text style={{ color: Colors.light.buttonText, fontWeight: '700', fontSize: 13 }}>
                   {todayClockOut ? `✓ ${todayClockOut}` : 'Clock Out'}
                 </Text>
@@ -286,9 +287,12 @@ export default function EmployeeDashboard() {
                 elevation: 2,
               }}
             >
-              <Text style={{ fontSize: 13, fontWeight: '600', color: Colors.light.buttonBackground, marginBottom: 12 }}>
-                💰 Today's Earnings
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                <DollarSign size={18} color={Colors.light.buttonBackground} />
+                <Text style={{ fontSize: 13, fontWeight: '600', color: Colors.light.buttonBackground }}>
+                  Today&apos;s Earnings
+                </Text>
+              </View>
               <Text style={{ fontSize: 36, fontWeight: 'bold', color: Colors.light.buttonBackground }}>
                 {formatCurrency(salaryDetails.todayAccumulated)}
               </Text>
@@ -314,7 +318,10 @@ export default function EmployeeDashboard() {
                   elevation: 2,
                 }}
               >
-                <Text style={{ fontSize: 12, color: Colors.light.icon, marginBottom: 12, fontWeight: '500' }}>📅 This Week</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                  <Calendar size={16} color={Colors.light.icon} />
+                  <Text style={{ fontSize: 12, color: Colors.light.icon, fontWeight: '500' }}>This Week</Text>
+                </View>
                 <Text style={{ fontSize: 24, fontWeight: 'bold', color: Colors.light.buttonBackground }}>
                   {formatCurrency(salaryDetails.weekAccumulated)}
                 </Text>
@@ -335,7 +342,10 @@ export default function EmployeeDashboard() {
                   elevation: 2,
                 }}
               >
-                <Text style={{ fontSize: 12, color: Colors.light.icon, marginBottom: 12, fontWeight: '500' }}>📆 This Month</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                  <Calendar size={16} color={Colors.light.icon} />
+                  <Text style={{ fontSize: 12, color: Colors.light.icon, fontWeight: '500' }}>This Month</Text>
+                </View>
                 <Text style={{ fontSize: 24, fontWeight: 'bold', color: Colors.light.success }}>
                   {formatCurrency(salaryDetails.monthAccumulated)}
                 </Text>
@@ -372,7 +382,7 @@ export default function EmployeeDashboard() {
                   elevation: 1,
                 }}
               >
-                <Text style={{ fontSize: 56, marginBottom: 12 }}>📋</Text>
+                <Clipboard size={56} color={Colors.light.icon} strokeWidth={1.5} />
                 <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.light.text }}>
                   No records found
                 </Text>
@@ -411,7 +421,7 @@ export default function EmployeeDashboard() {
                     <View
                       style={{
                         paddingHorizontal: 10,
-                        paddingVertical: 5,
+                        paddingVertical: 6,
                         borderRadius: 6,
                         backgroundColor:
                           record.status === 'present'
@@ -419,8 +429,18 @@ export default function EmployeeDashboard() {
                             : record.status === 'absent'
                               ? Colors.light.danger
                               : Colors.light.warning,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
                       }}
                     >
+                      {record.status === 'present' ? (
+                        <Check size={14} color={Colors.light.buttonText} />
+                      ) : record.status === 'absent' ? (
+                        <X size={14} color={Colors.light.buttonText} />
+                      ) : (
+                        <AlertCircle size={14} color={Colors.light.buttonText} />
+                      )}
                       <Text
                         style={{
                           fontSize: 11,
@@ -429,21 +449,27 @@ export default function EmployeeDashboard() {
                           letterSpacing: 0.5,
                         }}
                       >
-                        {record.status === 'present' ? '✓ PRESENT' : record.status === 'absent' ? '✗ ABSENT' : '⚠ LATE'}
+                        {record.status === 'present' ? 'PRESENT' : record.status === 'absent' ? 'ABSENT' : 'LATE'}
                       </Text>
                     </View>
                   </View>
 
                   {record.clockIn && (
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ color: Colors.light.icon, fontSize: 13 }}>🕐 Clock In:</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Clock size={13} color={Colors.light.icon} />
+                        <Text style={{ color: Colors.light.icon, fontSize: 13 }}>Clock In:</Text>
+                      </View>
                       <Text style={{ fontWeight: '600', color: Colors.light.text, fontSize: 14 }}>{record.clockIn}</Text>
                     </View>
                   )}
 
                   {record.clockOut && (
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ color: Colors.light.icon, fontSize: 13 }}>🚪 Clock Out:</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <LogOut size={13} color={Colors.light.icon} />
+                        <Text style={{ color: Colors.light.icon, fontSize: 13 }}>Clock Out:</Text>
+                      </View>
                       <Text style={{ fontWeight: '600', color: Colors.light.text, fontSize: 14 }}>{record.clockOut}</Text>
                     </View>
                   )}
@@ -459,7 +485,10 @@ export default function EmployeeDashboard() {
                         borderTopColor: Colors.light.divider,
                       }}
                     >
-                      <Text style={{ color: Colors.light.icon, fontSize: 13 }}>⏱ Duration:</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Clock size={13} color={Colors.light.icon} />
+                        <Text style={{ color: Colors.light.icon, fontSize: 13 }}>Duration:</Text>
+                      </View>
                       <Text style={{ fontWeight: '700', color: Colors.light.buttonBackground, fontSize: 14 }}>{record.duration}</Text>
                     </View>
                   )}
@@ -523,7 +552,7 @@ export default function EmployeeDashboard() {
             {/* Accumulated Earnings */}
             <View style={{ gap: 14 }}>
               <Text style={{ fontSize: 16, fontWeight: 'bold', color: Colors.light.text }}>
-                💵 Accumulated Earnings
+                Accumulated Earnings
               </Text>
 
               <View
@@ -540,7 +569,10 @@ export default function EmployeeDashboard() {
                   elevation: 1,
                 }}
               >
-                <Text style={{ fontSize: 12, color: Colors.light.success, marginBottom: 10, fontWeight: '600' }}>🕐 Today</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <Clock size={14} color={Colors.light.success} />
+                  <Text style={{ fontSize: 12, color: Colors.light.success, fontWeight: '600' }}>Today</Text>
+                </View>
                 <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.success }}>
                   {formatCurrency(salaryDetails.todayAccumulated)}
                 </Text>
@@ -560,7 +592,10 @@ export default function EmployeeDashboard() {
                   elevation: 1,
                 }}
               >
-                <Text style={{ fontSize: 12, color: Colors.light.buttonBackground, marginBottom: 10, fontWeight: '600' }}>📅 This Week</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <Calendar size={14} color={Colors.light.buttonBackground} />
+                  <Text style={{ fontSize: 12, color: Colors.light.buttonBackground, fontWeight: '600' }}>This Week</Text>
+                </View>
                 <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.buttonBackground }}>
                   {formatCurrency(salaryDetails.weekAccumulated)}
                 </Text>
@@ -580,7 +615,10 @@ export default function EmployeeDashboard() {
                   elevation: 1,
                 }}
               >
-                <Text style={{ fontSize: 12, color: Colors.light.icon, marginBottom: 10, fontWeight: '600' }}>📆 This Month</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <Calendar size={14} color={Colors.light.icon} />
+                  <Text style={{ fontSize: 12, color: Colors.light.icon, fontWeight: '600' }}>This Month</Text>
+                </View>
                 <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.icon }}>
                   {formatCurrency(salaryDetails.monthAccumulated)}
                 </Text>

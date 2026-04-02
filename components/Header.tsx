@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import React from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Clock } from "lucide-react-native";
 import { Colors } from "@/constants/theme";
 
 export default function Header() {
@@ -30,9 +31,12 @@ export default function Header() {
           <Text style={{ fontSize: 24, fontWeight: '800', color: Colors.light.buttonText, letterSpacing: 0.5 }}>
             AttendPay
           </Text>
-          <Text style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.85)', fontWeight: '500', marginTop: 2 }}>
-            ⏱️ Attendance Management System
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <Clock size={12} color='rgba(255, 255, 255, 0.85)' />
+            <Text style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.85)', fontWeight: '500' }}>
+              Attendance Management System
+            </Text>
+          </View>
         </View>
       </View>
     </SafeAreaView>
