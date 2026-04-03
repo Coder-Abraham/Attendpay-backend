@@ -3,8 +3,8 @@ const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
-// Enable package exports resolution (needed for lucide-react-native and other modern packages)
-config.resolver.unstable_enablePackageExports = true;
+// Package exports resolution disabled — lucide-react-native uses file-based resolution
+// config.resolver.unstable_enablePackageExports = true;
 
 // Add asset extensions
 config.resolver.assetExts.push('png', 'jpg', 'jpeg', 'gif', 'webp');

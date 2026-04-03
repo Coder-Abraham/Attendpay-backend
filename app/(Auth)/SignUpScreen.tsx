@@ -16,7 +16,7 @@ import ScanQrCode from 'lucide-react-native/dist/cjs/icons/scan-qr-code';
 import ArrowLeft from 'lucide-react-native/dist/cjs/icons/arrow-left';
 import Header from '@/components/Header';
 import { BG_IMAGE, Colors } from '@/constants/theme';
-import { EmployeeRegistrationQRData } from '@/app/Interfaces/Admin';
+import { EmployeeRegistrationQRData } from '@/types/Admin';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
 // Steps: 0 = QR Scan, 1 = Personal Info, 2 = Security, 3 = Review
