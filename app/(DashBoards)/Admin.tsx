@@ -149,6 +149,7 @@ export default function AdminDashboard() {
       </View>
 
       <ScrollView style={{ flex: 1, backgroundColor: Colors.light.background }} contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
+        
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && stats && (
           <View style={{ gap: 20 }}>

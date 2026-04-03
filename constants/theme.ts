@@ -15,7 +15,7 @@ const dangerRed = '#EF4444';         // Absent/Error
 const neutralGray = '#6B7280';       // Neutral/Pending
 
 // Background Image - Used across all auth screens
-export const BG_IMAGE = require('../assets/images/Home-bg.jpg');
+export const BG_IMAGE = require('../assets/images/bg.jpg');
 
 export const Colors = {
   light: {

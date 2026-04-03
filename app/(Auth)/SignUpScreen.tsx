@@ -44,7 +44,7 @@ export default function SignUpScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ── QR Scan ──────────────────────────────────────────────────────────────
+  // ── QR Scan 
   const handleQRScanned = (result: any) => {
     if (isProcessing) return;
     setIsProcessing(true);
@@ -73,7 +73,8 @@ export default function SignUpScreen() {
     }
   };
 
-  // ── Navigation ────────────────────────────────────────────────────────────
+  // Navigation 
+
   const handleNext = () => {
     if (step === 1) {
       if (!name.trim()) { Alert.alert('Required', 'Please enter your full name'); return; }
@@ -96,7 +97,7 @@ export default function SignUpScreen() {
     setStep((s) => (s - 1) as Step);
   };
 
-  // ── Submit ────────────────────────────────────────────────────────────────
+  //  Submit 
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -111,7 +112,7 @@ export default function SignUpScreen() {
     }
   };
 
-  // ── Shared styles ─────────────────────────────────────────────────────────
+  // Shared style
   const inputStyle = {
     backgroundColor: Colors.light.cardBackground,
     borderWidth: 2,
@@ -126,7 +127,7 @@ export default function SignUpScreen() {
   const labelStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6, marginBottom: 8 };
   const labelText = { fontSize: 14, fontWeight: '700' as const, color: Colors.light.background };
 
-  // ── Step 0: QR Scanner ────────────────────────────────────────────────────
+  //  Step 0: QR Scanner 
   if (step === 0) {
     if (!permission) {
       return (
@@ -215,7 +216,7 @@ export default function SignUpScreen() {
     );
   }
 
-  // ── Steps 1–3: Form ───────────────────────────────────────────────────────
+  // Steps 1–3: Form 
   return (
     <ImageBackground source={BG_IMAGE} resizeMode="cover" style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }}>

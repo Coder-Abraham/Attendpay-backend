@@ -59,7 +59,7 @@ export default function Home() {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <Header variant="transparent" />
         
-        <View style={{ padding: 28, justifyContent: 'center', flex: 1, gap: 28 }}>
+        <View style={{ padding: 28, justifyContent: 'center', flex: 1, gap: 2 }}>
        
        
           <View style={{ gap: 8 }}>
@@ -72,7 +72,7 @@ export default function Home() {
               </Text>
             </View>
             <Text style={{ fontSize: 15, color: 'rgba(232, 244, 255, 0.95)', lineHeight: 22 }}>
-              Enter your Employee ID to access the attendance system
+              Enter your Employee ID to access the system
             </Text>
           </View>
 
@@ -111,7 +111,7 @@ export default function Home() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
                 <Lightbulb size={14} color='rgba(232, 244, 255, 0.8)' />
                 <Text style={{ fontSize: 12, color: 'rgba(232, 244, 255, 0.8)', fontWeight: '500' }}>
-                  Try: EMP001, EMP002, or ADM001
+                  E.g: EMP001, EMP002, or ADM001
                 </Text>
               </View>
             </View>
@@ -162,7 +162,7 @@ export default function Home() {
               </View>
             </View>
 
-            {/* Login Button */}
+           
             {/* Login Button */}
             <TouchableOpacity
               onPress={handleLogin}
