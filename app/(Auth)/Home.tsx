@@ -28,8 +28,12 @@ export default function Home() {
     }
 
     try {
-      await login(employeeId);
-      
+      const role = await login(employeeId);
+      if (role === 'admin') {
+        router.replace('/(DashBoards)/Admin' as any);
+      } else {
+        router.replace('/(DashBoards)/Employee' as any);
+      }
     } catch {
       alert('Login Failed: Employee ID not found. Please try again.');
     }

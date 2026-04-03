@@ -35,13 +35,22 @@ export const calculateHoursWorked = (clockIn: string | null, clockOut: string | 
   if (!clockIn || !clockOut) return 0;
 
   try {
-    const [inHour, inMinute] = clockIn.split(':').map((x) => parseInt(x));
-    const [outHour, outMinute] = clockOut.split(':').map((x) => parseInt(x));
+    const parseTime = (timeStr: string): number => {
+      // Handle "HH:MM AM/PM" format
+      const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+      if (!match) return 0;
+      let hour = parseInt(match[1]);
+      const minute = parseInt(match[2]);
+      const period = match[3]?.toUpperCase();
+      if (period === 'PM' && hour !== 12) hour += 12;
+      if (period === 'AM' && hour === 12) hour = 0;
+      return hour * 60 + minute;
+    };
 
-    const inTotalMinutes = inHour * 60 + inMinute;
-    const outTotalMinutes = outHour * 60 + outMinute;
-
-    return (outTotalMinutes - inTotalMinutes) / 60;
+    const inTotalMinutes = parseTime(clockIn);
+    const outTotalMinutes = parseTime(clockOut);
+    const diff = outTotalMinutes - inTotalMinutes;
+    return diff > 0 ? diff / 60 : 0;
   } catch {
     return 0;
   }

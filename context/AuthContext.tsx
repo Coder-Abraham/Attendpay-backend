@@ -3,7 +3,7 @@ import { UserRole, UserAuthState, UserRoleResponse } from '../app/Interfaces/Aut
 
 interface AuthContextType {
   user: UserAuthState;
-  login: (employeeId: string) => Promise<void>;
+  login: (employeeId: string) => Promise<UserRole>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
   };
 
-  const login = async (employeeId: string) => {
+  const login = async (employeeId: string): Promise<UserRole> => {
     setIsLoading(true);
     try {
       // Simulate API call
@@ -64,9 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         error: null,
       });
 
-      // Store in AsyncStorage for persistence (optional)
-      // await AsyncStorage.setItem('userId', userFound.userId);
-      // await AsyncStorage.setItem('userRole', userFound.role);
+      return userFound.role;
     } catch (error) {
       setUser((prev) => ({
         ...prev,

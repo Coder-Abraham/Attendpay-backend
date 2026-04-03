@@ -23,7 +23,7 @@ export default function Header() {
         }}
       >
         <Image
-          source={require("../../../assets/images/uict-logo.png")}
+          source={require("../assets/images/uict-logo.png")}
           style={{ height: 44, width: 44 }}
           contentFit="contain"
         />

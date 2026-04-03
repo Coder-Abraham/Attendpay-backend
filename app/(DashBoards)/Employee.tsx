@@ -28,7 +28,7 @@ export default function EmployeeDashboard() {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [showScanner, setShowScanner] = useState(false);
   const [scannerMode, setScannerMode] = useState<'in' | 'out' | null>(null);
-  const [todayClockIn, setTodayClockIn] = useState<string | null>('09:00 AM');
+  const [todayClockIn, setTodayClockIn] = useState<string | null>(null);
   const [todayClockOut, setTodayClockOut] = useState<string | null>(null);
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export default function EmployeeDashboard() {
         text: 'Logout',
         onPress: () => {
           logout();
-          router.replace('/(Auth)' as any);
+          router.replace('/(Auth)/Home' as any);
         },
       },
     ]);

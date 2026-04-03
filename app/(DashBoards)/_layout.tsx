@@ -1,10 +1,10 @@
 import React from "react";
-import { Stack, useRouter } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { ActivityIndicator, View } from "react-native";
+
 export default function DashBoardsLayout() {
   const { user, isLoading } = useAuth();
-  const router = useRouter();
 
   if (isLoading) {
     return (
@@ -14,13 +14,9 @@ export default function DashBoardsLayout() {
     );
   }
 
-  // Redirect to login if no user is authenticated
   if (!user.userId) {
-    router.replace('/(Auth)');
-    return null;
+    return <Redirect href="/(Auth)/Home" />;
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }} />
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

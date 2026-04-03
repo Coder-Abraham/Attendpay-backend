@@ -3,7 +3,7 @@
  * Central export point for all backend services
  */
 
-export { apiClient, API_CONFIG, API_ENDPOINTS, ApiResponse, ApiError, type ApiResponse as IApiResponse } from './api';
+export { apiClient, API_CONFIG, API_ENDPOINTS, type ApiResponse, type ApiError } from './api';
 export { authService, type LoginResponse, type RegisterRequest } from './authService';
 export { employeeService, type EmployeeProfile, type SalaryDetails, type ClockInOutResponse } from './employeeService';
 export { adminService, type EmployeeRecord, type DailyAttendanceReport, type QRCodeResponse } from './adminService';

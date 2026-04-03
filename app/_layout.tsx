@@ -1,9 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import "../global.css";
 
-import { Stack } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 import { useColorScheme } from 'react-native';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
@@ -14,14 +12,17 @@ function RootLayoutContent() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(Auth)" />
+        <Stack.Screen name="(DashBoards)" />
+      </Stack>
+      {!user.userId && <Redirect href="/(Auth)/Home" />}
       <StatusBar style="auto" />
     </ThemeProvider>
   );
 }
 
 export default function RootLayout() {
-
   return (
     <AuthProvider>
       <RootLayoutContent />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,6 @@ import {
   calculateAdminDashboardStats,
   fetchEmployeeRecords,
   fetchDailyAttendanceReport,
-  getSalaryConfigs,
   getAdminSalaryOverview,
 } from '@/utils/adminUtils';
 import { formatCurrency } from '@/utils/salaryUtils';
@@ -34,7 +33,6 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [employees, setEmployees] = useState<any[]>([]);
   const [dailyReports, setDailyReports] = useState<any[]>([]);
-  const [salaryConfigs, setSalaryConfigs] = useState<any[]>([]);
   const [salaryOverview, setSalaryOverview] = useState<any[]>([]);
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrType, setQrType] = useState<'arrival' | 'departure' | 'registration'>('arrival');
@@ -49,13 +47,11 @@ export default function AdminDashboard() {
       const dashboardStats = calculateAdminDashboardStats();
       const employeeRecords = fetchEmployeeRecords();
       const dailyAttendance = fetchDailyAttendanceReport();
-      const salaries = getSalaryConfigs();
       const salaryOverviewData = getAdminSalaryOverview();
 
       setStats(dashboardStats);
       setEmployees(employeeRecords);
       setDailyReports(dailyAttendance);
-      setSalaryConfigs(salaries);
       setSalaryOverview(salaryOverviewData);
     } catch (error) {
       Alert.alert('Error', 'Failed to load admin data');
@@ -71,7 +67,7 @@ export default function AdminDashboard() {
         text: 'Logout',
         onPress: () => {
           logout();
-          router.replace('/(Auth)' as any);
+          router.replace('/(Auth)/Home' as any);
         },
       },
     ]);
