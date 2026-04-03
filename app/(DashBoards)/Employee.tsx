@@ -1,12 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Modal,
+  View, Text, ScrollView, TouchableOpacity,
+  ActivityIndicator, Alert, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -17,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/theme';
 import { mockAttendanceData } from '@/utils/mockData';
 import { formatCurrency, getEmployeeSalaryDetails, calculateHoursWorked } from '@/utils/salaryUtils';
+import { attendanceService } from '@/services/attendanceService';
 
 export default function EmployeeDashboard() {
   const router = useRouter();
@@ -30,6 +26,7 @@ export default function EmployeeDashboard() {
   const [scannerMode, setScannerMode] = useState<'in' | 'out' | null>(null);
   const [todayClockIn, setTodayClockIn] = useState<string | null>(null);
   const [todayClockOut, setTodayClockOut] = useState<string | null>(null);
+  const [clockingInOut, setClockingInOut] = useState(false);
 
   useEffect(() => {
     // Update current time every second
@@ -83,20 +80,48 @@ export default function EmployeeDashboard() {
     }
   };
 
-  const handleScanQR = (data: string) => {
+  const handleScanQR = async (data: string) => {
     try {
-      JSON.parse(data); // Validate QR code format
-      if (scannerMode === 'in') {
-        setTodayClockIn(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }));
-        Alert.alert('Success', 'Clock in recorded successfully!');
-      } else {
-        setTodayClockOut(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }));
-        Alert.alert('Success', 'Clock out recorded successfully!');
-      }
-      setShowScanner(false);
-      setScannerMode(null);
+      JSON.parse(data); // validate QR format
     } catch {
       Alert.alert('Error', 'Invalid QR code');
+      return;
+    }
+
+    setShowScanner(false);
+    setClockingInOut(true);
+
+    try {
+      const employeeId = user.userId ?? '';
+      const result = scannerMode === 'in'
+        ? await attendanceService.clockIn(employeeId, data)
+        : await attendanceService.clockOut(employeeId, data);
+
+      if (!result.success || !result.data) {
+        Alert.alert('Error', result.error ?? 'Failed to record attendance');
+        return;
+      }
+
+      const timeLabel = new Date(result.data.timestamp).toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', hour12: true,
+      });
+
+      const locationLine = result.data.location
+        ? `📍 ${result.data.location.latitude.toFixed(5)}, ${result.data.location.longitude.toFixed(5)}`
+        : '📍 Location unavailable';
+
+      if (scannerMode === 'in') {
+        setTodayClockIn(timeLabel);
+        Alert.alert('Clocked In', `Time: ${timeLabel}\n${locationLine}`);
+      } else {
+        setTodayClockOut(timeLabel);
+        Alert.alert('Clocked Out', `Time: ${timeLabel}\n${locationLine}`);
+      }
+    } catch {
+      Alert.alert('Error', 'Failed to record attendance. Please try again.');
+    } finally {
+      setClockingInOut(false);
+      setScannerMode(null);
     }
   };
 
@@ -194,7 +219,8 @@ export default function EmployeeDashboard() {
           <View style={{ gap: 20 }}>
             <View style={{ gap: 4 }}>
               <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.text }}>
-                Good {new Date().getHours() < 12 ? 'Morning' : 'Afternoon'}!
+                Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'},{' '}
+                {user.name ? user.name.split(' ')[0] : 'there'}!
               </Text>
               <Text style={{ fontSize: 14, color: Colors.light.icon }}>
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -623,6 +649,21 @@ export default function EmployeeDashboard() {
           </View>
         )}
       </ScrollView>
+
+      {/* Location capture overlay */}
+      {clockingInOut && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', zIndex: 99 }}>
+          <View style={{ backgroundColor: Colors.light.cardBackground, borderRadius: 16, padding: 28, alignItems: 'center', gap: 14, width: '75%' }}>
+            <ActivityIndicator size="large" color={Colors.light.buttonBackground} />
+            <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.light.text }}>
+              {scannerMode === 'in' ? 'Recording Clock-In...' : 'Recording Clock-Out...'}
+            </Text>
+            <Text style={{ fontSize: 12, color: Colors.light.icon, textAlign: 'center' }}>
+              Capturing timestamp and location
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* QR Scanner Modal */}
       <Modal visible={showScanner} transparent animationType="slide">

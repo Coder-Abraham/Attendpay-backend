@@ -1,10 +1,11 @@
 import { mockSalaryData } from './mockData';
 
-export const formatCurrency = (amount: number, currency: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
+export const formatCurrency = (amount: number, currency: string = 'UGX') => {
+  return new Intl.NumberFormat('en-UG', {
     style: 'currency',
     currency,
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount);
 };
 
@@ -19,12 +20,12 @@ export const getEmployeeSalaryDetails = (employeeId: string) => {
         monthlySalary: 0,
         dailySalary: 0,
         hourlySalary: 0,
-        currency: 'USD',
+        currency: 'UGX',
       },
       todayAccumulated: 0,
       weekAccumulated: 0,
       monthAccumulated: 0,
-      currency: 'USD',
+      currency: 'UGX',
       lastUpdated: new Date().toISOString(),
     };
   }
@@ -62,7 +63,7 @@ export const getSalaryConfigs = () => {
     employeeName: data.employeeName,
     monthlySalary: data.monthlySalary,
     currency: data.currency,
-    startDate: '2023-01-01',
+    startDate: '2024-09-02',
   }));
 };
 

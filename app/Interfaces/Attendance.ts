@@ -4,7 +4,7 @@ export interface AttendanceRecord {
   date: string;
   clockIn: string | null;
   clockOut: string | null;
-  duration?: string; // calculated duration
+  duration?: string; 
   status: "present" | "absent" | "incomplete";
 }
 

@@ -1,15 +1,15 @@
 export interface SalaryConfig {
   employeeId: string;
   employeeName: string;
-  monthlySalary: number; // Monthly salary in currency
-  currency: string; // e.g., "USD", "EUR"
-  startDate: string; // Date when salary becomes effective (YYYY-MM-DD)
+  monthlySalary: number; 
+  currency: string;
+  startDate: string; 
 }
 
 export interface SalaryBreakdown {
   monthlySalary: number;
-  dailySalary: number; // Monthly / 22 (average working days)
-  hourlySalary: number; // Daily / 8 (standard working hours)
+  dailySalary: number; 
+  hourlySalary: number; 
   currency: string;
 }
 

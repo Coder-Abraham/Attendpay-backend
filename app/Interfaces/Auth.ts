@@ -2,6 +2,7 @@ export type UserRole = "employee" | "admin" | null;
 
 export interface UserAuthState {
   userId: string | null;
+  name: string | null;
   role: UserRole;
   organizationId?: string;
   isLoading: boolean;

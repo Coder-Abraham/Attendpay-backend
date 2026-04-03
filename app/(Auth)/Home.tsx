@@ -11,7 +11,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Hand, IdCard, Lightbulb, Unlock, Plus } from 'lucide-react-native';
+import { Hand, IdCard, Lightbulb, Unlock, Plus, Lock } from 'lucide-react-native';
+// @ts-ignore - individual icon imports for icons not in named exports
+import Eye from 'lucide-react-native/dist/cjs/icons/eye';
+// @ts-ignore
+import EyeOff from 'lucide-react-native/dist/cjs/icons/eye-off';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
 import { BG_IMAGE, Colors } from '@/constants/theme';
@@ -20,15 +24,21 @@ export default function Home() {
   const router = useRouter();
   const { login, isLoading } = useAuth();
   const [employeeId, setEmployeeId] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!employeeId.trim()) {
       Alert.alert('Error', 'Please enter your Employee ID');
       return;
     }
+    if (!password.trim()) {
+      Alert.alert('Error', 'Please enter your password');
+      return;
+    }
 
     try {
-      const role = await login(employeeId);
+      const role = await login(employeeId, password);
       if (role === 'admin') {
         router.replace('/(DashBoards)/Admin' as any);
       } else {
@@ -47,7 +57,7 @@ export default function Home() {
     >
       <SafeAreaView style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <Header />
+          <Header variant="transparent" />
         
         <View style={{ padding: 28, justifyContent: 'center', flex: 1, gap: 28 }}>
        
@@ -99,7 +109,6 @@ export default function Home() {
                 }}
               />
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-               
                 <Lightbulb size={14} color='rgba(232, 244, 255, 0.8)' />
                 <Text style={{ fontSize: 12, color: 'rgba(232, 244, 255, 0.8)', fontWeight: '500' }}>
                   Try: EMP001, EMP002, or ADM001
@@ -107,10 +116,53 @@ export default function Home() {
               </View>
             </View>
 
+            {/* Password Field */}
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                <Lock size={18} color={Colors.light.background} />
+                <Text style={{ fontSize: 14, fontWeight: '700', color: Colors.light.background }}>
+                  Password
+                </Text>
+              </View>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: Colors.light.cardBackground,
+                borderWidth: 2,
+                borderColor: Colors.light.inputBorder,
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.08,
+                shadowRadius: 4,
+                elevation: 2,
+              }}>
+                <TextInput
+                  placeholder="Enter your password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  editable={!isLoading}
+                  placeholderTextColor="rgba(176, 212, 232, 0.6)"
+                  style={{
+                    flex: 1,
+                    paddingVertical: 14,
+                    fontSize: 15,
+                    color: Colors.light.text,
+                    fontWeight: '500',
+                  }}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(p => !p)} style={{ padding: 4 }}>
+                  {showPassword
+                    ? <EyeOff size={20} color={Colors.light.icon} />
+                    : <Eye size={20} color={Colors.light.icon} />
+                  }
+                </TouchableOpacity>
+              </View>
+            </View>
 
-
-
-
+            {/* Login Button */}
             {/* Login Button */}
             <TouchableOpacity
               onPress={handleLogin}
