@@ -45,7 +45,7 @@ export default function Header({ variant = 'solid' }: HeaderProps) {
             AttendPay
           </Text>
           <Text style={[styles.tagline, isTransparent && styles.taglineTransparent]}>
-            Attendance-based Payroll
+            Attendance-based Payroll System
           </Text>
         </View>
 
