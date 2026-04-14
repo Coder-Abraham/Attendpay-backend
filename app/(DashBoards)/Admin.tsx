@@ -390,7 +390,7 @@ export default function AdminDashboard() {
                   shadowRadius: 4,
                   elevation: 1,
                 }}
-              >
+               >
                 <View style={{ gap: 4 }}>
                   <Text style={{ fontSize: 16, fontWeight: '700', color: Colors.light.text }}>
                     {emp.name}

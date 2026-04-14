@@ -255,19 +255,19 @@ export default function SignUpScreen() {
 
                 <View>
                   <View style={labelStyle}><User size={16} color={Colors.light.background} /><Text style={labelText}>Full Name</Text></View>
-                  <TextInput placeholder="e.g. John Doe" value={name} onChangeText={setName} placeholderTextColor="rgba(176,212,232,0.5)" style={inputStyle} />
+                  <TextInput placeholder="e.g. Katandi Abraham" value={name} onChangeText={setName} placeholderTextColor="rgba(176,212,232,0.5)" style={inputStyle} />
                 </View>
                 <View>
                   <View style={labelStyle}><Mail size={16} color={Colors.light.background} /><Text style={labelText}>Email Address</Text></View>
-                  <TextInput placeholder="john@company.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholderTextColor="rgba(176,212,232,0.5)" style={inputStyle} />
+                  <TextInput placeholder="someone@company.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholderTextColor="rgba(176,212,232,0.5)" style={inputStyle} />
                 </View>
                 <View>
                   <View style={labelStyle}><Phone size={16} color={Colors.light.background} /><Text style={labelText}>Phone Number</Text></View>
-                  <TextInput placeholder="+1 234 567 8900" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholderTextColor="rgba(176,212,232,0.5)" style={inputStyle} />
+                  <TextInput placeholder="+256 7123 456 78" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholderTextColor="rgba(176,212,232,0.5)" style={inputStyle} />
                 </View>
                 <View>
                   <View style={labelStyle}><IdCard size={16} color={Colors.light.background} /><Text style={labelText}>Employee ID</Text></View>
-                  <TextInput placeholder="e.g. EMP003" value={employeeId} onChangeText={setEmployeeId} autoCapitalize="characters" placeholderTextColor="rgba(176,212,232,0.5)" style={inputStyle} />
+                  <TextInput placeholder="e.g, EMP005" value={employeeId} onChangeText={setEmployeeId} autoCapitalize="characters" placeholderTextColor="rgba(176,212,232,0.5)" style={inputStyle} />
                   <Text style={{ fontSize: 11, color: 'rgba(232,244,255,0.6)', marginTop: 6 }}>Your Employee ID will be assigned by your admin</Text>
                 </View>
               </View>
