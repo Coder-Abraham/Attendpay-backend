@@ -613,11 +613,23 @@ export default function AdminDashboard() {
               </View>
             <View style={{ width: 220, height: 220, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: Colors.light.divider }}>
               <QRGenerator
-                value={JSON.stringify({
-                  type: qrType,
-                  timestamp: new Date().toISOString(),
-                  organizationId: 'ORG001',
-                })}
+                value={
+                  qrType === 'registration'
+                    ? JSON.stringify({
+                        type: 'employee-registration',
+                        organizationId: 'ORG001',
+                        organizationName: 'UICT',
+                        registrationCode: `REG-${Date.now()}`,
+                        adminId: 'ADM001',
+                        timestamp: new Date().toISOString(),
+                        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                      })
+                    : JSON.stringify({
+                        type: qrType,
+                        timestamp: new Date().toISOString(),
+                        organizationId: 'ORG001',
+                      })
+                }
               />
             </View>
 
