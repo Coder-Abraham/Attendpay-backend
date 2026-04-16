@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  ActivityIndicator, Alert, ScrollView, ImageBackground, Modal,
+  ActivityIndicator, Alert, ScrollView, ImageBackground,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -220,8 +221,17 @@ export default function SignUpScreen() {
   return (
     <ImageBackground source={BG_IMAGE} resizeMode="cover" style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <Header />
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <Header />
           <View style={{ padding: 24, gap: 24 }}>
 
             {/* Org badge — shown after scan */}
@@ -370,6 +380,7 @@ export default function SignUpScreen() {
 
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ImageBackground>
   );
