@@ -47,6 +47,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       organizationId: 'ORG001',
       password: 'emp003',
     },
+    'EMP004': {
+      userId: 'EMP004',
+      email: 'otaijoshua@uict.ac.ug',
+      name: 'Otai Joshua',
+      role: 'employee',
+      organizationId: 'ORG001',
+      password: 'emp004',
+    },
+    'EMP005': {
+      userId: 'EMP005',
+      email: 'jonathanowiny@uict.ac.ug',
+      name: 'Owiny Jonathan',
+      role: 'employee',
+      organizationId: 'ORG001',
+      password: 'emp005',
+    },
     'ADM001': {
       userId: 'ADM001',
       email: 'Katandiabraham@uict.ac.ug',
