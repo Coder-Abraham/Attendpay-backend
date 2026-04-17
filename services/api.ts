@@ -10,10 +10,9 @@
 // BACKEND CONFIGURATION - UPDATE THIS WITH YOUR SERVER URL
 // ============================================================================
 export const API_CONFIG = {
-  // Change this to your backend server URL
   BASE_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
-  TIMEOUT: 30000,
-  RETRY_ATTEMPTS: 3,
+  TIMEOUT: 10000,
+  RETRY_ATTEMPTS: 0,  // Set to 0 until backend is ready — avoids repeated fetch failed errors
   RETRY_DELAY: 1000,
 };
 
