@@ -55,7 +55,8 @@
           "locationAlwaysAndWhenInUsePermission": "Allow AttendPay to access your location to record attendance.",
           "locationWhenInUsePermission": "Allow AttendPay to access your location to record attendance."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
