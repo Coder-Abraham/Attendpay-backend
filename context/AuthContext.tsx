@@ -1,10 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { UserRole, UserAuthState, UserRoleResponse } from '../types/Auth';
+import { apiClient } from '@/services/api';
+import { authService } from '@/services/authService';
+import { createContext, ReactNode, useContext, useState } from 'react';
+import type { UserAuthState, UserRole } from '../types/Auth';
 
 interface AuthContextType {
-  user: UserAuthState;
-  login: (employeeId: string, password: string) => Promise<UserRole>;
-  logout: () => void;
+  user:      UserAuthState;
+  login:     (employeeId: string, password: string) => Promise<UserRole>;
+  logout:    () => void;
   isLoading: boolean;
 }
 
@@ -12,95 +14,42 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserAuthState>({
-    userId: null,
-    name: null,
-    role: null,
+    userId:         null,
+    name:           null,
+    role:           null,
     organizationId: undefined,
-    isLoading: false,
-    error: null,
+    isLoading:      false,
+    error:          null,
   });
   const [isLoading, setIsLoading] = useState(false);
-
-  // Mock user database
-  const mockUsers: Record<string, UserRoleResponse & { password: string }> = {
-    'EMP001': {
-      userId: 'EMP001',
-      email: 'joesephsebadduka@uict.ac.ug',
-      name: 'Ssebadduka Joseph',
-      role: 'employee',
-      organizationId: 'ORG001',
-      password: 'emp001',
-    },
-    'EMP002': {
-      userId: 'EMP002',
-      email: 'usabyimanadaniel@uict.ac.ug',
-      name: 'Usabyimana Daniel',
-      role: 'employee',
-      organizationId: 'ORG001',
-      password: 'emp002',
-    },
-    'EMP003': {
-      userId: 'EMP003',
-      email: 'merinasserabidde@uict.ac.ug',
-      name: 'Sserabidde Merina',
-      role: 'employee',
-      organizationId: 'ORG001',
-      password: 'emp003',
-    },
-    'EMP004': {
-      userId: 'EMP004',
-      email: 'otaijoshua@uict.ac.ug',
-      name: 'Otai Joshua',
-      role: 'employee',
-      organizationId: 'ORG001',
-      password: 'emp004',
-    },
-    'EMP005': {
-      userId: 'EMP005',
-      email: 'jonathanowiny@uict.ac.ug',
-      name: 'Owiny Jonathan',
-      role: 'employee',
-      organizationId: 'ORG001',
-      password: 'emp005',
-    },
-    'ADM001': {
-      userId: 'ADM001',
-      email: 'Katandiabraham@uict.ac.ug',
-      name: 'Abraham Katandi',
-      role: 'admin',
-      organizationId: 'ORG001',
-      password: 'adm001',
-    },
-  };
 
   const login = async (employeeId: string, password: string): Promise<UserRole> => {
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await authService.login(employeeId, password);
 
-      const userFound = mockUsers[employeeId.toUpperCase()];
-      if (!userFound) {
-        throw new Error('Employee ID not found');
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Login failed');
       }
-      if (userFound.password !== password) {
-        throw new Error('Incorrect password');
-      }
+
+      const { token, employee_id, name, role, organization_id } = response.data;
+
+      // Store token in the API client for all subsequent requests
+      apiClient.setAuthToken(token);
 
       setUser({
-        userId: userFound.userId,
-        name: userFound.name,
-        role: userFound.role,
-        organizationId: userFound.organizationId,
-        isLoading: false,
-        error: null,
+        userId:         employee_id,
+        name,
+        role:           role as UserRole,
+        organizationId: organization_id,
+        isLoading:      false,
+        error:          null,
       });
 
-      return userFound.role;
+      return role as UserRole;
     } catch (error) {
-      setUser((prev) => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'Login failed',
-      }));
+      const msg = error instanceof Error ? error.message : 'Login failed';
+      setUser(prev => ({ ...prev, error: msg }));
       throw error;
     } finally {
       setIsLoading(false);
@@ -108,13 +57,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    authService.logout();   // fires POST /auth/logout/ and clears token
     setUser({
-      userId: null,
-      name: null,
-      role: null,
+      userId:         null,
+      name:           null,
+      role:           null,
       organizationId: undefined,
-      isLoading: false,
-      error: null,
+      isLoading:      false,
+      error:          null,
     });
   };
 
@@ -127,8 +77,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };

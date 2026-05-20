@@ -1,148 +1,93 @@
-/**
- * Admin Service
- * Handles admin-related API calls
- */
+import { API_ENDPOINTS, apiClient, type ApiResponse } from './api';
 
-import { ApiResponse } from './api';
-// TODO: Uncomment when backend integration is ready
-// import { apiClient, API_ENDPOINTS } from './api';
+export interface AdminDashboard {
+  total_employees:    number;
+  present_today:      number;
+  absent_today:       number;
+  late_today:         number;
+  average_attendance: number;
+}
 
 export interface EmployeeRecord {
-  employeeId: string;
-  employeeName: string;
-  email: string;
-  department: string;
-  attendancePercentage: number;
-  totalDaysWorked: number;
+  employee_id:          string;
+  name:                 string;
+  email:                string;
+  department:           string;
+  is_approved:          boolean;
+  attendance_percentage: number;
+  total_days_worked:    number;
+  monthly_salary:       number | null;
 }
 
 export interface DailyAttendanceReport {
-  date: string;
-  totalEmployees: number;
-  presentEmployees: number;
-  absentEmployees: number;
-  lateArrivals: number;
+  date:            string;
+  total_employees: number;
+  present:         number;
+  absent:          number;
+  late:            number;
+  records:         any[];
 }
 
 export interface QRCodeResponse {
-  qrCode: string;
-  type: 'arrival' | 'departure' | 'registration';
-  expiresAt: string;
+  id:       string;
+  qr_type:  string;
+  date:     string;
+  token:    string;
+  payload:  Record<string, any>;
+}
+
+export interface SalaryOverviewItem {
+  employee_id:         string;
+  employee_name:       string;
+  department:          string;
+  monthly_salary:      number;
+  currency:            string;
+  hours_worked_today:  number;
+  accumulated_today:   number;
+  accumulated_month:   number;
 }
 
 class AdminService {
-  /**
-   * Get all employees
-   * (To be implemented when backend is ready)
-   */
-  async getEmployees(): Promise<ApiResponse<EmployeeRecord[]>> {
-    console.log('[AdminService] Fetching employees');
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.get<EmployeeRecord[]>(API_ENDPOINTS.ADMIN.GET_EMPLOYEES);
-
-    return {
-      success: false,
-      error: 'Employee list service not yet implemented',
-    };
+  getDashboard(): Promise<ApiResponse<AdminDashboard>> {
+    return apiClient.get<AdminDashboard>(API_ENDPOINTS.ADMIN.DASHBOARD);
   }
 
-  /**
-   * Get daily attendance report
-   * (To be implemented when backend is ready)
-   */
-  async getDailyAttendanceReport(date?: string): Promise<ApiResponse<DailyAttendanceReport[]>> {
-    console.log('[AdminService] Fetching attendance report for', date || 'today');
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.get<DailyAttendanceReport[]>(
-    //   `${API_ENDPOINTS.ADMIN.GET_ATTENDANCE_REPORT}?date=${date || ''}`
-    // );
-
-    return {
-      success: false,
-      error: 'Attendance report service not yet implemented',
-    };
+  getEmployees(): Promise<ApiResponse<EmployeeRecord[]>> {
+    return apiClient.get<EmployeeRecord[]>(API_ENDPOINTS.ADMIN.EMPLOYEES);
   }
 
-  /**
-   * Generate QR code for clock in/out
-   * (To be implemented when backend is ready)
-   */
-  async generateQRCode(type: 'arrival' | 'departure' | 'registration'): Promise<ApiResponse<QRCodeResponse>> {
-    console.log('[AdminService] Generating QR code:', type);
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.post<QRCodeResponse>(
-    //   API_ENDPOINTS.ADMIN.GENERATE_QR,
-    //   { type }
-    // );
-
-    return {
-      success: true,
-      data: {
-        qrCode: JSON.stringify({
-          type,
-          timestamp: new Date().toISOString(),
-          organizationId: 'ORG001',
-        }),
-        type,
-        expiresAt: new Date(Date.now() + 3600000).toISOString(),
-      },
-    };
+  approveEmployee(employeeId: string): Promise<ApiResponse<{ message: string }>> {
+    return apiClient.post(`${API_ENDPOINTS.ADMIN.EMPLOYEES}${employeeId}/approve/`);
   }
 
-  /**
-   * Get salary configuration
-   * (To be implemented when backend is ready)
-   */
-  async getSalaryConfig(): Promise<ApiResponse<any>> {
-    console.log('[AdminService] Fetching salary configuration');
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.get<any>(API_ENDPOINTS.ADMIN.GET_SALARY_CONFIG);
-
-    return {
-      success: false,
-      error: 'Salary configuration service not yet implemented',
-    };
+  getDailyAttendanceReport(date?: string): Promise<ApiResponse<DailyAttendanceReport>> {
+    const params = date ? `?date=${date}` : '';
+    return apiClient.get<DailyAttendanceReport>(`${API_ENDPOINTS.ADMIN.ATTENDANCE}${params}`);
   }
 
-  /**
-   * Update employee information
-   * (To be implemented when backend is ready)
-   */
-  async updateEmployee(employeeId: string, data: any): Promise<ApiResponse<EmployeeRecord>> {
-    console.log('[AdminService] Updating employee:', employeeId, data);
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.put<EmployeeRecord>(
-    //   API_ENDPOINTS.ADMIN.UPDATE_EMPLOYEE.replace(':id', employeeId),
-    //   data
-    // );
-
-    return {
-      success: false,
-      error: 'Employee update service not yet implemented',
-    };
+  getQRCode(type: 'arrival' | 'departure' | 'registration'): Promise<ApiResponse<QRCodeResponse>> {
+    return apiClient.get<QRCodeResponse>(API_ENDPOINTS.QR[type.toUpperCase() as 'ARRIVAL' | 'DEPARTURE' | 'REGISTRATION']);
   }
 
-  /**
-   * Delete employee
-   * (To be implemented when backend is ready)
-   */
-  async deleteEmployee(employeeId: string): Promise<ApiResponse<{ message: string }>> {
-    console.log('[AdminService] Deleting employee:', employeeId);
+  getSalaryOverview(): Promise<ApiResponse<SalaryOverviewItem[]>> {
+    return apiClient.get<SalaryOverviewItem[]>(API_ENDPOINTS.ADMIN.SALARY_OVERVIEW);
+  }
 
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.delete<{ message: string }>(
-    //   `${API_ENDPOINTS.ADMIN.GET_EMPLOYEES}/${employeeId}`
-    // );
+  assignSalary(data: {
+    employee_id:    string;
+    monthly_salary: number;
+    salary_type?:   string;
+    currency?:      string;
+    working_days?:  number;
+  }): Promise<ApiResponse<any>> {
+    return apiClient.post(API_ENDPOINTS.ADMIN.SALARIES, data);
+  }
 
-    return {
-      success: false,
-      error: 'Employee deletion service not yet implemented',
-    };
+  getPayroll(year?: number, month?: number): Promise<ApiResponse<any[]>> {
+    const today = new Date();
+    const y = year  || today.getFullYear();
+    const m = month || today.getMonth() + 1;
+    return apiClient.get<any[]>(`${API_ENDPOINTS.ADMIN.PAYROLL}?year=${y}&month=${m}`);
   }
 }
 

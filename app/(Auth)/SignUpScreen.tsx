@@ -1,24 +1,19 @@
-import { useState } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  ActivityIndicator, Alert, ScrollView, ImageBackground,
-  KeyboardAvoidingView, Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Mail, Lock, Check, Building2, CheckCircle, IdCard } from 'lucide-react-native';
-// @ts-ignore
-import ShieldAlert from 'lucide-react-native/dist/cjs/icons/shield-alert';
-// @ts-ignore
-import Phone from 'lucide-react-native/dist/cjs/icons/phone';
-// @ts-ignore
-import ScanQrCode from 'lucide-react-native/dist/cjs/icons/scan-qr-code';
-// @ts-ignore
-import ArrowLeft from 'lucide-react-native/dist/cjs/icons/arrow-left';
 import Header from '@/components/Header';
 import { BG_IMAGE, Colors } from '@/constants/theme';
 import { EmployeeRegistrationQRData } from '@/types/Admin';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useRouter } from 'expo-router';
+import { ArrowLeft, Building2, Check, CheckCircle, IdCard, Lock, Mail, Phone, ScanQrCode, ShieldAlert, User } from 'lucide-react-native';
+import { useState } from 'react';
+import {
+    ActivityIndicator, Alert,
+    ImageBackground,
+    KeyboardAvoidingView, Platform,
+    ScrollView,
+    Text, TextInput, TouchableOpacity,
+    View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Steps: 0 = QR Scan, 1 = Personal Info, 2 = Security, 3 = Review
 type Step = 0 | 1 | 2 | 3;
@@ -50,21 +45,25 @@ export default function SignUpScreen() {
     if (isProcessing) return;
     setIsProcessing(true);
     try {
-      const data = JSON.parse(result.data) as EmployeeRegistrationQRData;
-      if (data.type !== 'employee-registration') {
+      const data = JSON.parse(result.data);
+      // Backend QR payload: { type, date, token, organization_id, qr_id }
+      if (data.type !== 'registration') {
         Alert.alert('Invalid QR', 'This QR code is not a registration code. Please ask your admin for the correct one.', [
           { text: 'Try Again', onPress: () => setIsProcessing(false) },
         ]);
         return;
       }
-      // Check expiry
-      if (new Date(data.expiresAt) < new Date()) {
-        Alert.alert('QR Expired', 'This registration QR code has expired. Please ask your admin to generate a new one.', [
-          { text: 'OK', onPress: () => setIsProcessing(false) },
-        ]);
-        return;
-      }
-      setOrgData(data);
+      // Build EmployeeRegistrationQRData from backend payload
+      const orgQRData: EmployeeRegistrationQRData = {
+        organizationId:    data.organization_id || 'ORG001',
+        organizationName:  'UICT',
+        registrationCode:  data.token,          // token is what backend validates
+        timestamp:         new Date().toISOString(),
+        type:              'employee-registration',
+        adminId:           'ADM001',
+        expiresAt:         new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      };
+      setOrgData(orgQRData);
       setIsScanning(false);
       setStep(1);
     } catch {
@@ -102,10 +101,26 @@ export default function SignUpScreen() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 1500));
-      Alert.alert('Account Created!', `Welcome to ${orgData?.organizationName}. Your account has been created. Please wait for admin approval before logging in.`, [
-        { text: 'Go to Login', onPress: () => router.replace('/(Auth)/Home' as any) },
-      ]);
+      const response = await authService.register({
+        employee_id:        employeeId,
+        name,
+        email,
+        phone,
+        password,
+        organization_id:    orgData?.organizationId || 'ORG001',
+        registration_token: orgData?.registrationCode || '',
+      });
+
+      if (!response.success) {
+        Alert.alert('Registration Failed', response.error || 'Please try again.');
+        return;
+      }
+
+      Alert.alert(
+        'Account Created!',
+        `Welcome to ${orgData?.organizationName}. Your account has been created. Please wait for admin approval before logging in.`,
+        [{ text: 'Go to Login', onPress: () => router.replace('/(Auth)/Home' as any) }],
+      );
     } catch {
       Alert.alert('Error', 'Registration failed. Please try again.');
     } finally {
@@ -265,7 +280,7 @@ export default function SignUpScreen() {
 
                 <View>
                   <View style={labelStyle}><User size={16} color={Colors.light.background} /><Text style={labelText}>Full Name</Text></View>
-                  <TextInput placeholder="e.g. Katandi Abraham" value={name} onChangeText={setName} placeholderTextColor="rgba(176,212,232,0.5)" style={inputStyle} />
+                  <TextInput value={name} onChangeText={setName} placeholderTextColor="rgba(176,212,232,0.5)" style={inputStyle} />
                 </View>
                 <View>
                   <View style={labelStyle}><Mail size={16} color={Colors.light.background} /><Text style={labelText}>Email Address</Text></View>

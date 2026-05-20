@@ -1,22 +1,12 @@
-/**
- * Services Index
- * Central export point for all backend services
- */
-
-export { apiClient, API_CONFIG, API_ENDPOINTS, type ApiResponse, type ApiError } from './api';
+export { adminService, type AdminDashboard, type DailyAttendanceReport, type EmployeeRecord, type QRCodeResponse, type SalaryOverviewItem } from './adminService';
+export { API_CONFIG, API_ENDPOINTS, apiClient, type ApiError, type ApiResponse } from './api';
+export { attendanceService, type LocationSnapshot } from './attendanceService';
 export { authService, type LoginResponse, type RegisterRequest } from './authService';
-export { employeeService, type EmployeeProfile, type SalaryDetails, type ClockInOutResponse } from './employeeService';
-export { adminService, type EmployeeRecord, type DailyAttendanceReport, type QRCodeResponse } from './adminService';
+export { employeeService, type AttendanceRecord, type ClockInOutResponse, type EmployeeDashboard, type EmployeeProfile, type SalaryDetails } from './employeeService';
 
-// Export all services as a namespace for convenience
+import { adminService } from './adminService';
+import { attendanceService } from './attendanceService';
 import { authService } from './authService';
 import { employeeService } from './employeeService';
-import { adminService } from './adminService';
 
-export const services = {
-  auth: authService,
-  employee: employeeService,
-  admin: adminService,
-};
-
-export default services;
+export const services = { auth: authService, employee: employeeService, admin: adminService, attendance: attendanceService };

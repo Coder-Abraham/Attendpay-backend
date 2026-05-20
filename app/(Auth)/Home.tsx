@@ -1,26 +1,26 @@
+import { useRouter } from 'expo-router';
+import { Hand, IdCard, Lightbulb, Lock, Plus, Unlock } from 'lucide-react-native';
 import { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
+    ActivityIndicator,
+    Alert,
+    ImageBackground,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Hand, IdCard, Lightbulb, Unlock, Plus, Lock } from 'lucide-react-native';
 // @ts-ignore - individual icon imports for icons not in named exports
 import Eye from 'lucide-react-native/dist/cjs/icons/eye';
 // @ts-ignore
-import EyeOff from 'lucide-react-native/dist/cjs/icons/eye-off';
 import Header from '@/components/Header';
-import { useAuth } from '@/context/AuthContext';
 import { BG_IMAGE, Colors } from '@/constants/theme';
+import { useAuth } from '@/context/AuthContext';
+import EyeOff from 'lucide-react-native/dist/cjs/icons/eye-off';
 
 export default function Home() {
   const router = useRouter();
@@ -46,8 +46,9 @@ export default function Home() {
       } else {
         router.replace('/(DashBoards)/Employee' as any);
       }
-    } catch {
-      alert('Login Failed: Employee ID not found. Please try again.');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Login failed. Please try again.';
+      Alert.alert('Login Failed', msg);
     }
   };
 

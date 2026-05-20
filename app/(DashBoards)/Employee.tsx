@@ -1,122 +1,92 @@
-import { useEffect, useState, useCallback } from 'react';
-import {
-  View, Text, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert, Modal,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Check, Clipboard } from 'lucide-react-native';
 import Header from '@/components/Header';
 import QRScanner from '@/components/QRScanner';
-import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/theme';
-import { mockAttendanceData } from '@/utils/mockData';
-import { formatCurrency, getEmployeeSalaryDetails, calculateHoursWorked } from '@/utils/salaryUtils';
+import { useAuth } from '@/context/AuthContext';
 import { attendanceService } from '@/services/attendanceService';
+import type { AttendanceRecord, EmployeeDashboard } from '@/services/employeeService';
+import { employeeService } from '@/services/employeeService';
+import { useRouter } from 'expo-router';
+import { Check, Clipboard } from 'lucide-react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+type Tab = 'dashboard' | 'attendance' | 'salary';
 
 export default function EmployeeDashboard() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'attendance' | 'salary'>('dashboard');
-  const [loading, setLoading] = useState(true);
-  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
-  const [salaryDetails, setSalaryDetails] = useState<any>(null);
-  const [currentTime, setCurrentTime] = useState<string>('');
-  const [showScanner, setShowScanner] = useState(false);
-  const [scannerMode, setScannerMode] = useState<'in' | 'out' | null>(null);
-  const [todayClockIn, setTodayClockIn] = useState<string | null>(null);
-  const [todayClockOut, setTodayClockOut] = useState<string | null>(null);
-  const [clockingInOut, setClockingInOut] = useState(false);
 
+  const [activeTab,    setActiveTab]    = useState<Tab>('dashboard');
+  const [loading,      setLoading]      = useState(true);
+  const [dashboard,    setDashboard]    = useState<EmployeeDashboard | null>(null);
+  const [attendance,   setAttendance]   = useState<AttendanceRecord[]>([]);
+  const [currentTime,  setCurrentTime]  = useState('');
+  const [showScanner,  setShowScanner]  = useState(false);
+  const [scannerMode,  setScannerMode]  = useState<'in' | 'out' | null>(null);
+  const [clockingInOut,setClockingInOut]= useState(false);
+
+  // Live clock
   useEffect(() => {
-    // Update current time every second
     const timer = setInterval(() => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: true,
-        })
-      );
+      setCurrentTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
-  const loadEmployeeData = useCallback(() => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // Load attendance records
-      const records = mockAttendanceData.filter((r) => r.employeeId === user.userId);
-      setAttendanceRecords(records);
-
-      // Load salary details
-      const salary = getEmployeeSalaryDetails(user.userId || '');
-      setSalaryDetails(salary);
+      const [dashRes, attRes] = await Promise.all([
+        employeeService.getDashboard(),
+        employeeService.getAttendanceHistory(),
+      ]);
+      if (dashRes.success && dashRes.data) setDashboard(dashRes.data);
+      if (attRes.success  && attRes.data)  setAttendance(attRes.data);
     } catch {
-      Alert.alert('Error', 'Failed to load employee data');
+      Alert.alert('Error', 'Failed to load dashboard');
     } finally {
       setLoading(false);
     }
-  }, [user.userId]);
+  }, []);
 
-  useEffect(() => {
-    loadEmployeeData();
-  }, [loadEmployeeData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  const handleClockIn = () => {
-    if (!showScanner) {
-      setScannerMode('in');
-      setShowScanner(true);
-    }
-  };
-
-  const handleClockOut = () => {
-    if (!showScanner) {
-      setScannerMode('out');
-      setShowScanner(true);
-    }
-  };
-
-  const handleScanQR = async (data: string) => {
-    try {
-      JSON.parse(data); // validate QR format
-    } catch {
-      Alert.alert('Error', 'Invalid QR code');
-      return;
-    }
-
+  const handleScanQR = async (rawData: string) => {
     setShowScanner(false);
     setClockingInOut(true);
 
     try {
-      const employeeId = user.userId ?? '';
+      // Parse the QR payload to extract the token
+      let qrToken: string;
+      try {
+        const payload = JSON.parse(rawData);
+        qrToken = payload.token;
+        if (!qrToken) throw new Error('no token');
+      } catch {
+        Alert.alert('Error', 'Invalid QR code format');
+        return;
+      }
+
       const result = scannerMode === 'in'
-        ? await attendanceService.clockIn(employeeId, data)
-        : await attendanceService.clockOut(employeeId, data);
+        ? await attendanceService.clockIn(qrToken)
+        : await attendanceService.clockOut(qrToken);
 
       if (!result.success || !result.data) {
         Alert.alert('Error', result.error ?? 'Failed to record attendance');
         return;
       }
 
-      const timeLabel = new Date(result.data.timestamp).toLocaleTimeString('en-US', {
-        hour: '2-digit', minute: '2-digit', hour12: true,
-      });
-
-      const locationLine = result.data.location
-        ? `📍 ${result.data.location.latitude.toFixed(5)}, ${result.data.location.longitude.toFixed(5)}`
+      const { time, location } = result.data;
+      const locationLine = location
+        ? `📍 ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
         : '📍 Location unavailable';
 
-      if (scannerMode === 'in') {
-        setTodayClockIn(timeLabel);
-        Alert.alert('Clocked In', `Time: ${timeLabel}\n${locationLine}`);
-      } else {
-        setTodayClockOut(timeLabel);
-        Alert.alert('Clocked Out', `Time: ${timeLabel}\n${locationLine}`);
-      }
+      Alert.alert(
+        scannerMode === 'in' ? 'Clocked In ✓' : 'Clocked Out ✓',
+        `Time: ${time}\n${locationLine}`,
+        [{ text: 'OK', onPress: loadData }],
+      );
     } catch {
       Alert.alert('Error', 'Failed to record attendance. Please try again.');
     } finally {
@@ -126,23 +96,28 @@ export default function EmployeeDashboard() {
   };
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
+    Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        onPress: () => {
-          logout();
-          router.replace('/(Auth)/Home' as any);
-        },
-      },
+      { text: 'Logout', onPress: () => { logout(); router.replace('/(Auth)/Home' as any); } },
     ]);
   };
+
+  const formatCurrency = (n: number) =>
+    new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0 }).format(n);
+
+  const formatTime = (iso: string | null) => {
+    if (!iso) return null;
+    return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
+
+  const hasClockedIn  = !!dashboard?.today_clock_in;
+  const hasClockedOut = !!dashboard?.today_clock_out;
 
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.light.background }}>
         <ActivityIndicator size="large" color={Colors.light.buttonBackground} />
-        <Text style={{ marginTop: 16, color: Colors.light.icon }}>Loading Employee Dashboard...</Text>
+        <Text style={{ marginTop: 16, color: Colors.light.icon }}>Loading...</Text>
       </SafeAreaView>
     );
   }
@@ -151,73 +126,29 @@ export default function EmployeeDashboard() {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.light.background }}>
       <Header />
 
-      {/* Tab Navigation */}
-      <View
-        style={{
-          flexDirection: 'row',
-          backgroundColor: Colors.light.cardBackground,
-          borderBottomWidth: 2,
-          borderBottomColor: Colors.light.divider,
-          paddingHorizontal: 12,
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 3,
-          elevation: 2,
-        }}
-      >
+      {/* Tab bar */}
+      <View style={{ flexDirection: 'row', backgroundColor: Colors.light.cardBackground, borderBottomWidth: 2, borderBottomColor: Colors.light.divider, paddingHorizontal: 12, justifyContent: 'space-between', alignItems: 'center' }}>
         <View style={{ flex: 1, flexDirection: 'row' }}>
-          {(['dashboard', 'attendance', 'salary'] as const).map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              style={{
-                flex: 1,
-                paddingVertical: 16,
-                borderBottomWidth: 3,
-                borderBottomColor: activeTab === tab ? Colors.light.buttonBackground : 'transparent',
-              }}
-            >
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontWeight: '600',
-                  color: activeTab === tab ? Colors.light.buttonBackground : Colors.light.icon,
-                  fontSize: 13,
-                }}
-              >
+          {(['dashboard', 'attendance', 'salary'] as Tab[]).map(tab => (
+            <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)}
+              style={{ flex: 1, paddingVertical: 16, borderBottomWidth: 3, borderBottomColor: activeTab === tab ? Colors.light.buttonBackground : 'transparent' }}>
+              <Text style={{ textAlign: 'center', fontWeight: '600', color: activeTab === tab ? Colors.light.buttonBackground : Colors.light.icon, fontSize: 13 }}>
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
-
-        <TouchableOpacity
-          onPress={handleLogout}
-          style={{
-            backgroundColor: Colors.light.danger,
-            paddingHorizontal: 14,
-            paddingVertical: 8,
-            borderRadius: 6,
-            marginLeft: 12,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.15,
-            shadowRadius: 3,
-            elevation: 3,
-          }}
-        >
-          <Text style={{ color: Colors.light.buttonText, fontWeight: '600', fontSize: 12 }}>Logout</Text>
+        <TouchableOpacity onPress={handleLogout} style={{ backgroundColor: Colors.light.danger, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, marginLeft: 12 }}>
+          <Text style={{ color: '#fff', fontWeight: '600', fontSize: 12 }}>Logout</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={{ flex: 1, backgroundColor: Colors.light.background }} contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
-        {/* DASHBOARD TAB */}
-        {activeTab === 'dashboard' && salaryDetails && (
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
+
+        {/* ── DASHBOARD ── */}
+        {activeTab === 'dashboard' && dashboard && (
           <View style={{ gap: 20 }}>
-            <View style={{ gap: 4 }}>
+            <View>
               <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.text }}>
                 Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'},{' '}
                 {user.name ? user.name.split(' ')[0] : 'there'}!
@@ -227,430 +158,118 @@ export default function EmployeeDashboard() {
               </Text>
             </View>
 
-            {/* Current Time Card */}
-            <View
-              style={{
-                backgroundColor: Colors.light.cardBackground,
-                borderRadius: 12,
-                padding: 24,
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: Colors.light.divider,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 6,
-                elevation: 3,
-              }}
-            >
-              <Text style={{ fontSize: 13, color: Colors.light.icon, marginBottom: 12, fontWeight: '500' }}>Current Time</Text>
-              <Text style={{ fontSize: 56, fontWeight: 'bold', color: Colors.light.buttonBackground, letterSpacing: 2 }}>
-                {currentTime}
-              </Text>
+            {/* Clock */}
+            <View style={{ backgroundColor: Colors.light.cardBackground, borderRadius: 12, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: Colors.light.divider }}>
+              <Text style={{ fontSize: 13, color: Colors.light.icon, marginBottom: 12 }}>Current Time</Text>
+              <Text style={{ fontSize: 52, fontWeight: 'bold', color: Colors.light.buttonBackground, letterSpacing: 2 }}>{currentTime}</Text>
             </View>
 
-            {/* Clock In/Out Buttons */}
+            {/* Clock In / Out buttons */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <TouchableOpacity
-                onPress={handleClockIn}
-                disabled={!!todayClockIn}
-                style={{
-                  flex: 1,
-                  backgroundColor: todayClockIn ? Colors.light.success : Colors.light.success,
-                  borderRadius: 12,
-                  paddingVertical: 18,
-                  alignItems: 'center',
-                  opacity: todayClockIn ? 0.6 : 1,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: todayClockIn ? 0.05 : 0.12,
-                  shadowRadius: 6,
-                  elevation: todayClockIn ? 1 : 3,
-                }}
-              >
-
-                <Text style={{ color: Colors.light.buttonText, fontWeight: '700', fontSize: 13 }}>
-                  {todayClockIn ? `✓ ${todayClockIn}` : 'Clock In'}
+                onPress={() => { setScannerMode('in'); setShowScanner(true); }}
+                disabled={hasClockedIn}
+                style={{ flex: 1, backgroundColor: Colors.light.success, borderRadius: 12, paddingVertical: 18, alignItems: 'center', opacity: hasClockedIn ? 0.6 : 1 }}>
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>
+                  {hasClockedIn ? `✓ ${formatTime(dashboard.today_clock_in)}` : 'Clock In'}
                 </Text>
               </TouchableOpacity>
-
               <TouchableOpacity
-                onPress={handleClockOut}
-                disabled={!todayClockIn || !!todayClockOut}
-                style={{
-                  flex: 1,
-                  backgroundColor: !todayClockIn ? Colors.light.neutral : todayClockOut ? Colors.light.warning : Colors.light.warning,
-                  borderRadius: 12,
-                  paddingVertical: 18,
-                  alignItems: 'center',
-                  opacity: todayClockOut ? 0.6 : !todayClockIn ? 0.5 : 1,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: !todayClockIn || todayClockOut ? 0.05 : 0.12,
-                  shadowRadius: 6,
-                  elevation: !todayClockIn || todayClockOut ? 1 : 3,
-                }}
-              >
-
-                <Text style={{ color: Colors.light.buttonText, fontWeight: '700', fontSize: 13 }}>
-                  {todayClockOut ? `✓ ${todayClockOut}` : 'Clock Out'}
+                onPress={() => { setScannerMode('out'); setShowScanner(true); }}
+                disabled={!hasClockedIn || hasClockedOut}
+                style={{ flex: 1, backgroundColor: !hasClockedIn ? Colors.light.neutral : Colors.light.warning, borderRadius: 12, paddingVertical: 18, alignItems: 'center', opacity: hasClockedOut || !hasClockedIn ? 0.6 : 1 }}>
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>
+                  {hasClockedOut ? `✓ ${formatTime(dashboard.today_clock_out)}` : 'Clock Out'}
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* Today's Earnings */}
-            <View
-              style={{
-                backgroundColor: 'rgba(0, 160, 210, 0.08)',
-                borderRadius: 12,
-                padding: 20,
-                borderWidth: 2,
-                borderColor: Colors.light.icon,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.06,
-                shadowRadius: 5,
-                elevation: 2,
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-
-                <Text style={{ fontSize: 13, fontWeight: '600', color: Colors.light.buttonBackground }}>
-                  Today&apos;s Earnings
-                </Text>
-              </View>
-              <Text style={{ fontSize: 36, fontWeight: 'bold', color: Colors.light.buttonBackground }}>
-                {formatCurrency(salaryDetails.todayAccumulated)}
-              </Text>
-              <Text style={{ fontSize: 12, color: Colors.light.icon, marginTop: 8 }}>
-                Based on {calculateHoursWorked(todayClockIn, todayClockOut).toFixed(1)} hours worked
-              </Text>
+            {/* Today's earnings */}
+            <View style={{ backgroundColor: 'rgba(0,160,210,0.08)', borderRadius: 12, padding: 20, borderWidth: 2, borderColor: Colors.light.icon }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: Colors.light.buttonBackground, marginBottom: 8 }}>Today's Earnings</Text>
+              <Text style={{ fontSize: 36, fontWeight: 'bold', color: Colors.light.buttonBackground }}>{formatCurrency(dashboard.today_accumulated)}</Text>
+              <Text style={{ fontSize: 12, color: Colors.light.icon, marginTop: 6 }}>Based on {dashboard.today_hours_worked.toFixed(1)} hours worked</Text>
             </View>
 
-            {/* This Week & Month */}
+            {/* Week / Month */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: Colors.light.cardBackground,
-                  borderRadius: 12,
-                  padding: 18,
-                  borderWidth: 1,
-                  borderColor: Colors.light.divider,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.06,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-
-                  <Text style={{ fontSize: 12, color: Colors.light.icon, fontWeight: '500' }}>This Week</Text>
+              {[
+                { label: 'This Week',  value: dashboard.week_accumulated,  color: Colors.light.buttonBackground },
+                { label: 'This Month', value: dashboard.month_accumulated, color: Colors.light.success },
+              ].map(c => (
+                <View key={c.label} style={{ flex: 1, backgroundColor: Colors.light.cardBackground, borderRadius: 12, padding: 18, borderWidth: 1, borderColor: Colors.light.divider }}>
+                  <Text style={{ fontSize: 12, color: Colors.light.icon, marginBottom: 8 }}>{c.label}</Text>
+                  <Text style={{ fontSize: 22, fontWeight: 'bold', color: c.color }}>{formatCurrency(c.value)}</Text>
                 </View>
-                <Text style={{ fontSize: 24, fontWeight: 'bold', color: Colors.light.buttonBackground }}>
-                  {formatCurrency(salaryDetails.weekAccumulated)}
-                </Text>
-              </View>
-
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: Colors.light.cardBackground,
-                  borderRadius: 12,
-                  padding: 18,
-                  borderWidth: 1,
-                  borderColor: Colors.light.divider,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.06,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-
-                  <Text style={{ fontSize: 12, color: Colors.light.icon, fontWeight: '500' }}>This Month</Text>
-                </View>
-                <Text style={{ fontSize: 24, fontWeight: 'bold', color: Colors.light.success }}>
-                  {formatCurrency(salaryDetails.monthAccumulated)}
-                </Text>
-              </View>
+              ))}
             </View>
           </View>
         )}
 
-        {/* ATTENDANCE TAB */}
+        {/* ── ATTENDANCE ── */}
         {activeTab === 'attendance' && (
-          <View style={{ gap: 20 }}>
-            <View style={{ gap: 4 }}>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.text }}>
-                Attendance Records
-              </Text>
-              <Text style={{ fontSize: 14, color: Colors.light.icon }}>
-                View your attendance history
-              </Text>
-            </View>
-
-            {attendanceRecords.length === 0 ? (
-              <View
-                style={{
-                  backgroundColor: Colors.light.cardBackground,
-                  borderRadius: 12,
-                  padding: 40,
-                  alignItems: 'center',
-                  borderWidth: 1,
-                  borderColor: Colors.light.divider,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
-                  elevation: 1,
-                }}
-              >
+          <View style={{ gap: 16 }}>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.text }}>Attendance Records</Text>
+            {attendance.length === 0 ? (
+              <View style={{ backgroundColor: Colors.light.cardBackground, borderRadius: 12, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: Colors.light.divider }}>
                 <Clipboard size={56} color={Colors.light.icon} strokeWidth={1.5} />
-                <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.light.text }}>
-                  No records found
-                </Text>
-                <Text style={{ fontSize: 13, color: Colors.light.icon, marginTop: 8, textAlign: 'center' }}>
-                  Your attendance records will appear here once you clock in
-                </Text>
+                <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.light.text, marginTop: 12 }}>No records yet</Text>
+                <Text style={{ fontSize: 13, color: Colors.light.icon, marginTop: 8, textAlign: 'center' }}>Your attendance will appear here after you clock in</Text>
               </View>
-            ) : (
-              attendanceRecords.map((record) => (
-                <View
-                  key={record.id}
-                  style={{
-                    backgroundColor: Colors.light.cardBackground,
-                    borderRadius: 12,
-                    padding: 16,
-                    borderWidth: 1,
-                    borderColor: Colors.light.divider,
-                    gap: 14,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 4,
-                    elevation: 1,
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: Colors.light.text }}>
-                      {record.date}
-                    </Text>
-                    <View
-                      style={{
-                        paddingHorizontal: 10,
-                        paddingVertical: 6,
-                        borderRadius: 6,
-                        backgroundColor:
-                          record.status === 'present'
-                            ? Colors.light.success
-                            : record.status === 'absent'
-                              ? Colors.light.danger
-                              : Colors.light.warning,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}
-                    >
-                      {record.status === 'present' && (
-                        <Check size={14} color={Colors.light.buttonText} />
-                      )}
-                      <Text
-                        style={{
-                          fontSize: 11,
-                          fontWeight: '700',
-                          color: Colors.light.buttonText,
-                          letterSpacing: 0.5,
-                        }}
-                      >
-                        {record.status === 'present' ? 'PRESENT' : record.status === 'absent' ? 'ABSENT' : 'LATE'}
-                      </Text>
-                    </View>
+            ) : attendance.map(rec => (
+              <View key={rec.id} style={{ backgroundColor: Colors.light.cardBackground, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: Colors.light.divider, gap: 10 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 15, fontWeight: 'bold', color: Colors.light.text }}>{rec.date}</Text>
+                  <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, backgroundColor: rec.status === 'present' ? Colors.light.success : rec.status === 'absent' ? Colors.light.danger : Colors.light.warning, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    {rec.status === 'present' && <Check size={12} color="#fff" />}
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#fff' }}>{rec.status.toUpperCase()}</Text>
                   </View>
-
-                  {record.clockIn && (
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-
-                        <Text style={{ color: Colors.light.icon, fontSize: 13 }}>Clock In:</Text>
-                      </View>
-                      <Text style={{ fontWeight: '600', color: Colors.light.text, fontSize: 14 }}>{record.clockIn}</Text>
-                    </View>
-                  )}
-
-                  {record.clockOut && (
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-
-                        <Text style={{ color: Colors.light.icon, fontSize: 13 }}>Clock Out:</Text>
-                      </View>
-                      <Text style={{ fontWeight: '600', color: Colors.light.text, fontSize: 14 }}>{record.clockOut}</Text>
-                    </View>
-                  )}
-
-                  {record.duration && (
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        paddingTop: 10,
-                        borderTopWidth: 1,
-                        borderTopColor: Colors.light.divider,
-                      }}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-
-                        <Text style={{ color: Colors.light.icon, fontSize: 13 }}>Duration:</Text>
-                      </View>
-                      <Text style={{ fontWeight: '700', color: Colors.light.buttonBackground, fontSize: 14 }}>{record.duration}</Text>
-                    </View>
-                  )}
                 </View>
-              ))
-            )}
+                {rec.clock_in_time  && <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Text style={{ color: Colors.light.icon, fontSize: 13 }}>Clock In:</Text><Text style={{ fontWeight: '600', color: Colors.light.text }}>{formatTime(rec.clock_in_time)}</Text></View>}
+                {rec.clock_out_time && <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Text style={{ color: Colors.light.icon, fontSize: 13 }}>Clock Out:</Text><Text style={{ fontWeight: '600', color: Colors.light.text }}>{formatTime(rec.clock_out_time)}</Text></View>}
+                {rec.duration       && <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, borderTopColor: Colors.light.divider }}><Text style={{ color: Colors.light.icon, fontSize: 13 }}>Duration:</Text><Text style={{ fontWeight: '700', color: Colors.light.buttonBackground }}>{rec.duration}</Text></View>}
+              </View>
+            ))}
           </View>
         )}
 
-        {/* SALARY TAB */}
-        {activeTab === 'salary' && salaryDetails && (
-          <View style={{ gap: 20 }}>
-            <View style={{ gap: 4 }}>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.text }}>
-                Salary Information
-              </Text>
-              <Text style={{ fontSize: 14, color: Colors.light.icon }}>
-                View your earnings breakdown
-              </Text>
+        {/* ── SALARY ── */}
+        {activeTab === 'salary' && dashboard && (
+          <View style={{ gap: 16 }}>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.text }}>Salary Information</Text>
+
+            <View style={{ backgroundColor: Colors.light.cardBackground, borderRadius: 12, padding: 20, borderWidth: 1, borderColor: Colors.light.divider, gap: 12 }}>
+              <View style={{ paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: Colors.light.divider }}>
+                <Text style={{ fontSize: 12, color: Colors.light.icon, marginBottom: 6 }}>Monthly Salary</Text>
+                <Text style={{ fontSize: 32, fontWeight: 'bold', color: Colors.light.buttonBackground }}>{formatCurrency(dashboard.monthly_salary)}</Text>
+              </View>
+              {[
+                { label: 'Daily Salary',  value: formatCurrency(dashboard.daily_salary) },
+                { label: 'Hourly Salary', value: formatCurrency(dashboard.hourly_salary) },
+              ].map(row => (
+                <View key={row.label} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ color: Colors.light.icon, fontSize: 13 }}>{row.label}:</Text>
+                  <Text style={{ fontWeight: '700', color: Colors.light.text, fontSize: 15 }}>{row.value}</Text>
+                </View>
+              ))}
             </View>
 
-            {/* Main Salary Card */}
-            <View
-              style={{
-                backgroundColor: Colors.light.cardBackground,
-                borderRadius: 12,
-                padding: 20,
-                borderWidth: 1,
-                borderColor: Colors.light.divider,
-                gap: 14,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 6,
-                elevation: 2,
-              }}
-            >
-              <View style={{ paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: Colors.light.divider }}>
-                <Text style={{ fontSize: 12, color: Colors.light.icon, marginBottom: 8, fontWeight: '500' }}>Monthly Salary</Text>
-                <Text style={{ fontSize: 32, fontWeight: 'bold', color: Colors.light.buttonBackground }}>
-                  {formatCurrency(salaryDetails.monthlySalary)}
-                </Text>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: Colors.light.text }}>Accumulated Earnings</Text>
+            {[
+              { label: 'Today',      value: dashboard.today_accumulated,  color: Colors.light.success,          bg: 'rgba(16,185,129,0.08)',  border: Colors.light.success },
+              { label: 'This Week',  value: dashboard.week_accumulated,   color: Colors.light.buttonBackground, bg: 'rgba(0,128,225,0.08)',   border: Colors.light.buttonBackground },
+              { label: 'This Month', value: dashboard.month_accumulated,  color: Colors.light.icon,             bg: 'rgba(0,160,210,0.08)',   border: Colors.light.icon },
+            ].map(c => (
+              <View key={c.label} style={{ backgroundColor: c.bg, borderRadius: 12, padding: 18, borderWidth: 2, borderColor: c.border }}>
+                <Text style={{ fontSize: 12, color: c.color, fontWeight: '600', marginBottom: 8 }}>{c.label}</Text>
+                <Text style={{ fontSize: 28, fontWeight: 'bold', color: c.color }}>{formatCurrency(c.value)}</Text>
               </View>
-
-              <View style={{ gap: 12 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ color: Colors.light.icon, fontSize: 13, fontWeight: '500' }}>Daily Salary:</Text>
-                  <Text style={{ fontWeight: '700', color: Colors.light.text, fontSize: 15 }}>
-                    {formatCurrency(salaryDetails.salaryBreakdown.dailySalary)}
-                  </Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ color: Colors.light.icon, fontSize: 13, fontWeight: '500' }}>Hourly Salary:</Text>
-                  <Text style={{ fontWeight: '700', color: Colors.light.text, fontSize: 15 }}>
-                    {formatCurrency(salaryDetails.salaryBreakdown.hourlySalary)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Accumulated Earnings */}
-            <View style={{ gap: 14 }}>
-              <Text style={{ fontSize: 16, fontWeight: 'bold', color: Colors.light.text }}>
-                Accumulated Earnings
-              </Text>
-
-              <View
-                style={{
-                  backgroundColor: 'rgba(16, 185, 129, 0.08)',
-                  borderRadius: 12,
-                  padding: 18,
-                  borderWidth: 2,
-                  borderColor: Colors.light.success,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 4,
-                  elevation: 1,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-
-                  <Text style={{ fontSize: 12, color: Colors.light.success, fontWeight: '600' }}>Today</Text>
-                </View>
-                <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.success }}>
-                  {formatCurrency(salaryDetails.todayAccumulated)}
-                </Text>
-              </View>
-
-              <View
-                style={{
-                  backgroundColor: 'rgba(0, 128, 225, 0.08)',
-                  borderRadius: 12,
-                  padding: 18,
-                  borderWidth: 2,
-                  borderColor: Colors.light.buttonBackground,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 4,
-                  elevation: 1,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-
-                  <Text style={{ fontSize: 12, color: Colors.light.buttonBackground, fontWeight: '600' }}>This Week</Text>
-                </View>
-                <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.buttonBackground }}>
-                  {formatCurrency(salaryDetails.weekAccumulated)}
-                </Text>
-              </View>
-
-              <View
-                style={{
-                  backgroundColor: 'rgba(0, 160, 210, 0.08)',
-                  borderRadius: 12,
-                  padding: 18,
-                  borderWidth: 2,
-                  borderColor: Colors.light.icon,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 4,
-                  elevation: 1,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-
-                  <Text style={{ fontSize: 12, color: Colors.light.icon, fontWeight: '600' }}>This Month</Text>
-                </View>
-                <Text style={{ fontSize: 28, fontWeight: 'bold', color: Colors.light.icon }}>
-                  {formatCurrency(salaryDetails.monthAccumulated)}
-                </Text>
-              </View>
-            </View>
+            ))}
           </View>
         )}
       </ScrollView>
 
-      {/* Location capture overlay */}
+      {/* Clocking overlay */}
       {clockingInOut && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', zIndex: 99 }}>
           <View style={{ backgroundColor: Colors.light.cardBackground, borderRadius: 16, padding: 28, alignItems: 'center', gap: 14, width: '75%' }}>
@@ -658,9 +277,7 @@ export default function EmployeeDashboard() {
             <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.light.text }}>
               {scannerMode === 'in' ? 'Recording Clock-In...' : 'Recording Clock-Out...'}
             </Text>
-            <Text style={{ fontSize: 12, color: Colors.light.icon, textAlign: 'center' }}>
-              Capturing timestamp and location
-            </Text>
+            <Text style={{ fontSize: 12, color: Colors.light.icon, textAlign: 'center' }}>Capturing timestamp and location</Text>
           </View>
         </View>
       )}
@@ -669,10 +286,7 @@ export default function EmployeeDashboard() {
       <Modal visible={showScanner} transparent animationType="slide">
         <QRScanner
           onQRScanned={handleScanQR}
-          onClose={() => {
-            setShowScanner(false);
-            setScannerMode(null);
-          }}
+          onClose={() => { setShowScanner(false); setScannerMode(null); }}
         />
       </Modal>
     </SafeAreaView>

@@ -1,148 +1,93 @@
-/**
- * Employee Service
- * Handles employee-related API calls
- */
-
-import { ApiResponse } from './api';
-// TODO: Uncomment when backend integration is ready
-// import { apiClient, API_ENDPOINTS } from './api';
+import { API_ENDPOINTS, apiClient, type ApiResponse } from './api';
 
 export interface EmployeeProfile {
-  userId: string;
-  name: string;
-  email: string;
-  department: string;
-  role: 'employee' | 'admin';
-  attendancePercentage: number;
-  totalDaysWorked: number;
+  employee_id:     string;
+  name:            string;
+  email:           string;
+  phone:           string;
+  department:      string;
+  organization_id: string;
+  role:            string;
+  is_approved:     boolean;
+}
+
+export interface EmployeeDashboard {
+  employee_id:        string;
+  name:               string;
+  role:               string;
+  today_clock_in:     string | null;
+  today_clock_out:    string | null;
+  today_status:       string;
+  today_hours_worked: number;
+  today_accumulated:  number;
+  week_accumulated:   number;
+  month_accumulated:  number;
+  monthly_salary:     number;
+  daily_salary:       number;
+  hourly_salary:      number;
 }
 
 export interface SalaryDetails {
-  baseSalary: number;
-  todayAccumulated: number;
-  weekAccumulated: number;
-  monthAccumulated: number;
-  hourlyRate: number;
+  monthly_salary:  number;
+  daily_salary:    number;
+  hourly_salary:   number;
+  today_accumulated: number;
+  week_accumulated:  number;
+  month_accumulated: number;
 }
 
 export interface ClockInOutResponse {
-  success: boolean;
-  timestamp: string;
-  message: string;
+  message:      string;
+  timestamp:    string;
+  time:         string;
+  hours_worked?: number;
+  location:     { latitude: number; longitude: number };
+}
+
+export interface AttendanceRecord {
+  id:             number;
+  employee_id:    string;
+  employee_name:  string;
+  date:           string;
+  clock_in_time:  string | null;
+  clock_out_time: string | null;
+  status:         'present' | 'absent' | 'incomplete';
+  hours_worked:   number;
+  duration:       string | null;
 }
 
 class EmployeeService {
-  /**
-   * Get employee profile
-   * (To be implemented when backend is ready)
-   */
-  async getProfile(): Promise<ApiResponse<EmployeeProfile>> {
-    console.log('[EmployeeService] Fetching profile');
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.get<EmployeeProfile>(API_ENDPOINTS.EMPLOYEES.GET_PROFILE);
-
-    return {
-      success: false,
-      error: 'Profile service not yet implemented',
-    };
+  getProfile(): Promise<ApiResponse<EmployeeProfile>> {
+    return apiClient.get<EmployeeProfile>(API_ENDPOINTS.PROFILE);
   }
 
-  /**
-   * Clock in the employee
-   * (To be implemented when backend is ready)
-   */
-  async clockIn(qrData?: any): Promise<ApiResponse<ClockInOutResponse>> {
-    console.log('[EmployeeService] Clock in', qrData);
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.post<ClockInOutResponse>(
-    //   API_ENDPOINTS.EMPLOYEES.CLOCK_IN,
-    //   { qrData }
-    // );
-
-    return {
-      success: true,
-      data: {
-        success: true,
-        timestamp: new Date().toISOString(),
-        message: 'Clocked in successfully',
-      },
-    };
+  getDashboard(): Promise<ApiResponse<EmployeeDashboard>> {
+    return apiClient.get<EmployeeDashboard>(API_ENDPOINTS.DASHBOARD);
   }
 
-  /**
-   * Clock out the employee
-   * (To be implemented when backend is ready)
-   */
-  async clockOut(qrData?: any): Promise<ApiResponse<ClockInOutResponse>> {
-    console.log('[EmployeeService] Clock out', qrData);
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.post<ClockInOutResponse>(
-    //   API_ENDPOINTS.EMPLOYEES.CLOCK_OUT,
-    //   { qrData }
-    // );
-
-    return {
-      success: true,
-      data: {
-        success: true,
-        timestamp: new Date().toISOString(),
-        message: 'Clocked out successfully',
-      },
-    };
+  clockIn(qrToken: string, latitude: number, longitude: number): Promise<ApiResponse<ClockInOutResponse>> {
+    return apiClient.post<ClockInOutResponse>(API_ENDPOINTS.ATTENDANCE.CLOCK_IN, {
+      qr_token: qrToken,
+      latitude,
+      longitude,
+    });
   }
 
-  /**
-   * Get employee salary details
-   * (To be implemented when backend is ready)
-   */
-  async getSalaryDetails(): Promise<ApiResponse<SalaryDetails>> {
-    console.log('[EmployeeService] Fetching salary details');
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.get<SalaryDetails>(API_ENDPOINTS.EMPLOYEES.GET_SALARY);
-
-    return {
-      success: false,
-      error: 'Salary service not yet implemented',
-    };
+  clockOut(qrToken: string, latitude: number, longitude: number): Promise<ApiResponse<ClockInOutResponse>> {
+    return apiClient.post<ClockInOutResponse>(API_ENDPOINTS.ATTENDANCE.CLOCK_OUT, {
+      qr_token: qrToken,
+      latitude,
+      longitude,
+    });
   }
 
-  /**
-   * Get attendance records for employee
-   * (To be implemented when backend is ready)
-   */
-  async getAttendanceRecords(): Promise<ApiResponse<any[]>> {
-    console.log('[EmployeeService] Fetching attendance records');
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.get<any[]>(API_ENDPOINTS.EMPLOYEES.GET_ATTENDANCE);
-
-    return {
-      success: false,
-      error: 'Attendance records service not yet implemented',
-    };
+  getAttendanceHistory(): Promise<ApiResponse<AttendanceRecord[]>> {
+    return apiClient.get<AttendanceRecord[]>(API_ENDPOINTS.ATTENDANCE.HISTORY);
   }
 
-  /**
-   * Update employee profile
-   * (To be implemented when backend is ready)
-   */
-  async updateProfile(data: Partial<EmployeeProfile>): Promise<ApiResponse<EmployeeProfile>> {
-    console.log('[EmployeeService] Updating profile', data);
-
-    // TODO: Replace with actual API call when backend is ready
-    // return apiClient.put<EmployeeProfile>(
-    //   API_ENDPOINTS.EMPLOYEES.UPDATE_PROFILE,
-    //   data
-    // );
-
-    return {
-      success: false,
-      error: 'Profile update service not yet implemented',
-    };
+  getPayroll(year?: number, month?: number): Promise<ApiResponse<any>> {
+    const params = year && month ? `?year=${year}&month=${month}` : '';
+    return apiClient.get(`${API_ENDPOINTS.PAYROLL}${params}`);
   }
 }
 
