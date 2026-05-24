@@ -64,14 +64,23 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Attendpay.wsgi.application'
 
 # ── Database ─────────────────────────────────────────────────────────────────
-# Uses DATABASE_URL env var in production (PostgreSQL on Railway).
+# Uses DATABASE_URL env var in production (PostgreSQL on Supabase/Railway).
 # Falls back to local SQLite for development.
 DATABASE_URL = config('DATABASE_URL', default=None)
 
 if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-    }
+    import re
+    # Supabase connection strings sometimes use the project ref as hostname.
+    # dj-database-url parses it correctly; we just need to pass ssl options.
+    db_config = dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=True,
+    )
+    # Remove sslmode from OPTIONS if psycopg2 doesn't support it this way
+    db_config.setdefault('OPTIONS', {})
+    db_config['OPTIONS']['sslmode'] = 'require'
+    DATABASES = {'default': db_config}
 else:
     DATABASES = {
         'default': {
