@@ -3,8 +3,8 @@
  * Simplifies API calls and state management for employee-related operations
  */
 
-import { useState, useCallback } from 'react';
-import { employeeService, type EmployeeProfile, type SalaryDetails } from '@/services';
+import { attendanceService, employeeService, type EmployeeProfile, type SalaryDetails } from '@/services';
+import { useCallback, useState } from 'react';
 
 export interface UseEmployeeReturn {
   profile: EmployeeProfile | null;
@@ -13,8 +13,8 @@ export interface UseEmployeeReturn {
   error: string | null;
   fetchProfile: () => Promise<void>;
   fetchSalary: () => Promise<void>;
-  clockIn: (qrData?: any) => Promise<boolean>;
-  clockOut: (qrData?: any) => Promise<boolean>;
+  clockIn: (qrToken?: string) => Promise<boolean>;
+  clockOut: (qrToken?: string) => Promise<boolean>;
 }
 
 /**
@@ -47,9 +47,18 @@ export const useEmployee = (): UseEmployeeReturn => {
     setLoading(true);
     setError(null);
     try {
-      const response = await employeeService.getSalaryDetails();
+      // getDashboard contains all salary breakdown fields
+      const response = await employeeService.getDashboard();
       if (response.success && response.data) {
-        setSalary(response.data);
+        const d = response.data;
+        setSalary({
+          monthly_salary:    d.monthly_salary,
+          daily_salary:      d.daily_salary,
+          hourly_salary:     d.hourly_salary,
+          today_accumulated: d.today_accumulated,
+          week_accumulated:  d.week_accumulated,
+          month_accumulated: d.month_accumulated,
+        });
       } else {
         setError(response.error || 'Failed to fetch salary details');
       }
@@ -60,11 +69,12 @@ export const useEmployee = (): UseEmployeeReturn => {
     }
   }, []);
 
-  const clockIn = useCallback(async (qrData?: any): Promise<boolean> => {
+  // Uses attendanceService which captures GPS location automatically
+  const clockIn = useCallback(async (qrToken: string = ''): Promise<boolean> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await employeeService.clockIn(qrData);
+      const response = await attendanceService.clockIn(qrToken);
       if (response.success) {
         return true;
       } else {
@@ -79,11 +89,11 @@ export const useEmployee = (): UseEmployeeReturn => {
     }
   }, []);
 
-  const clockOut = useCallback(async (qrData?: any): Promise<boolean> => {
+  const clockOut = useCallback(async (qrToken: string = ''): Promise<boolean> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await employeeService.clockOut(qrData);
+      const response = await attendanceService.clockOut(qrToken);
       if (response.success) {
         return true;
       } else {

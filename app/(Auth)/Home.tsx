@@ -1,26 +1,22 @@
-import { useRouter } from 'expo-router';
-import { Hand, IdCard, Lightbulb, Lock, Plus, Unlock } from 'lucide-react-native';
-import { useState } from 'react';
-import {
-    ActivityIndicator,
-    Alert,
-    ImageBackground,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-// @ts-ignore - individual icon imports for icons not in named exports
-import Eye from 'lucide-react-native/dist/cjs/icons/eye';
-// @ts-ignore
 import Header from '@/components/Header';
 import { BG_IMAGE, Colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
-import EyeOff from 'lucide-react-native/dist/cjs/icons/eye-off';
+import { useRouter } from 'expo-router';
+import { Eye, EyeOff, Hand, IdCard, Lightbulb, Lock, Plus, Unlock } from 'lucide-react-native';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Home() {
   const router = useRouter();
@@ -204,7 +200,6 @@ export default function Home() {
                 </>
               ) : (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  {/* @ts-ignore */}
                   <Unlock size={20} color={Colors.light.buttonText} />
                   <Text style={{ color: Colors.light.buttonText, fontWeight: '700', fontSize: 16 }}>
                     Login

@@ -1,17 +1,19 @@
-import Header from '@/components/Header';
 import { BG_IMAGE, Colors } from '@/constants/theme';
+import { authService } from '@/services/authService';
 import { EmployeeRegistrationQRData } from '@/types/Admin';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Building2, Check, CheckCircle, IdCard, Lock, Mail, Phone, ScanQrCode, ShieldAlert, User } from 'lucide-react-native';
 import { useState } from 'react';
 import {
-    ActivityIndicator, Alert,
-    ImageBackground,
-    KeyboardAvoidingView, Platform,
-    ScrollView,
-    Text, TextInput, TouchableOpacity,
-    View,
+  ActivityIndicator, Alert,
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView, Platform,
+  ScrollView,
+  StyleSheet,
+  Text, TextInput, TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,7 +28,6 @@ export default function SignUpScreen() {
 
   // QR scan state
   const [permission, requestPermission] = useCameraPermissions();
-  const [isScanning, setIsScanning] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orgData, setOrgData] = useState<EmployeeRegistrationQRData | null>(null);
 
@@ -64,7 +65,6 @@ export default function SignUpScreen() {
         expiresAt:         new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       };
       setOrgData(orgQRData);
-      setIsScanning(false);
       setStep(1);
     } catch {
       Alert.alert('Invalid QR', 'Could not read this QR code. Make sure you are scanning the registration QR from your admin.', [
@@ -93,7 +93,7 @@ export default function SignUpScreen() {
 
   const handleBack = () => {
     if (step === 0) { router.back(); return; }
-    if (step === 1) { setStep(0); setIsScanning(true); setIsProcessing(false); setOrgData(null); return; }
+    if (step === 1) { setStep(0); setIsProcessing(false); setOrgData(null); return; }
     setStep((s) => (s - 1) as Step);
   };
 
@@ -156,7 +156,14 @@ export default function SignUpScreen() {
       return (
         <ImageBackground source={BG_IMAGE} resizeMode="cover" style={{ flex: 1 }}>
           <SafeAreaView style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <Header />
+            {/* Compact top bar */}
+            <View style={styles.compactHeader}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.compactBackBtn}>
+                <ArrowLeft size={18} color="#fff" />
+              </TouchableOpacity>
+              <Image source={require('../../assets/images/uict-logo.png')} style={styles.compactLogo} resizeMode="cover" />
+              <Text style={styles.compactTitle}>AttendPay</Text>
+            </View>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32, gap: 20 }}>
               <ShieldAlert size={64} color={Colors.light.warning} />
               <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#fff', textAlign: 'center' }}>Camera Access Needed</Text>
@@ -246,8 +253,16 @@ export default function SignUpScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <Header />
-          <View style={{ padding: 24, gap: 24 }}>
+            {/* Compact header — replaces the tall full Header */}
+            <View style={styles.compactHeader}>
+              <TouchableOpacity onPress={handleBack} style={styles.compactBackBtn}>
+                <ArrowLeft size={18} color="#fff" />
+              </TouchableOpacity>
+              <Image source={require('../../assets/images/uict-logo.png')} style={styles.compactLogo} resizeMode="cover" />
+              <Text style={styles.compactTitle}>Create Account</Text>
+            </View>
+
+          <View style={{ padding: 20, gap: 20 }}>
 
             {/* Org badge — shown after scan */}
             {orgData && (
@@ -400,3 +415,41 @@ export default function SignUpScreen() {
     </ImageBackground>
   );
 }
+
+const styles = StyleSheet.create({
+  compactHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0060B8',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  compactBackBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactLogo: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.7)',
+  },
+  compactTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: 0.3,
+  },
+});

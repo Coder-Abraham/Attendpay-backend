@@ -65,6 +65,9 @@ export default function EmployeeDashboard() {
         if (!qrToken) throw new Error('no token');
       } catch {
         Alert.alert('Error', 'Invalid QR code format');
+        // Don't return here — fall through to finally so overlay is cleared
+        setClockingInOut(false);
+        setScannerMode(null);
         return;
       }
 

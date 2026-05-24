@@ -3,12 +3,12 @@
  * Simplifies API calls and state management for admin-related operations
  */
 
-import { useState, useCallback } from 'react';
-import { adminService, type EmployeeRecord, type DailyAttendanceReport, type QRCodeResponse } from '@/services';
+import { adminService, type DailyAttendanceReport, type EmployeeRecord, type QRCodeResponse } from '@/services';
+import { useCallback, useState } from 'react';
 
 export interface UseAdminReturn {
   employees: EmployeeRecord[] | null;
-  attendanceReport: DailyAttendanceReport[] | null;
+  attendanceReport: DailyAttendanceReport | null;
   qrCode: QRCodeResponse | null;
   loading: boolean;
   error: string | null;
@@ -22,7 +22,7 @@ export interface UseAdminReturn {
  */
 export const useAdmin = (): UseAdminReturn => {
   const [employees, setEmployees] = useState<EmployeeRecord[] | null>(null);
-  const [attendanceReport, setAttendanceReport] = useState<DailyAttendanceReport[] | null>(null);
+  const [attendanceReport, setAttendanceReport] = useState<DailyAttendanceReport | null>(null);
   const [qrCode, setQrCode] = useState<QRCodeResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +65,7 @@ export const useAdmin = (): UseAdminReturn => {
     setLoading(true);
     setError(null);
     try {
-      const response = await adminService.generateQRCode(type);
+      const response = await adminService.getQRCode(type);
       if (response.success && response.data) {
         setQrCode(response.data);
       } else {
