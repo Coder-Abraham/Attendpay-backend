@@ -1,4 +1,5 @@
 import sys
+import os
 from django.apps import AppConfig
 
 
@@ -7,9 +8,20 @@ class CoreConfig(AppConfig):
     name = 'core'
 
     def ready(self):
-        # Don't start the scheduler during management commands (migrate, makemigrations, etc.)
-        # or during testing — only start when the actual server runs.
-        if 'runserver' not in sys.argv and 'gunicorn' not in sys.argv[0]:
+        # Only start the scheduler when actually serving (not during migrate,
+        # collectstatic, shell, or any other management command).
+        run_main = os.environ.get('RUN_MAIN')  # set by Django dev server
+        is_gunicorn = 'gunicorn' in sys.argv[0] if sys.argv else False
+        is_runserver = 'runserver' in sys.argv
+
+        if not (is_gunicorn or is_runserver or run_main):
             return
-        from . import scheduler
-        scheduler.start()
+
+        try:
+            from . import scheduler
+            scheduler.start()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(
+                f'[Scheduler] Failed to start: {e}'
+            )

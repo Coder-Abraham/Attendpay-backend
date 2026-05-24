@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "AttendPay",
-    "slug": "AttendPay",
+    "slug": "automated-attendance-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/uict-logo.png",
@@ -44,9 +44,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow AttendPay to access your camera to scan QR codes.",
-          "microphonePermission": "Allow AttendPay to access your microphone.",
-          "recordAudioAndroid": false
+          "cameraPermission": "Allow AttendPay to access your camera to scan QR codes."
         }
       ],
       [
@@ -60,6 +58,12 @@
     ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a7889c38-7238-42b1-a0f1-86a55355fdf3"
+      }
+    },
+    "owner": "abraham123"
   }
 }
