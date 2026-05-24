@@ -64,14 +64,19 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Attendpay.wsgi.application'
 
 # ── Database ─────────────────────────────────────────────────────────────────
-# Uses DATABASE_URL env var in production (PostgreSQL on Railway).
+# Uses DATABASE_URL env var in production (PostgreSQL on Supabase).
 # Falls back to local SQLite for development.
 DATABASE_URL = config('DATABASE_URL', default=None)
 
 if DATABASE_URL:
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+        )
     }
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS']['sslmode'] = 'require'
 else:
     DATABASES = {
         'default': {
