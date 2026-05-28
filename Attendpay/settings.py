@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-o4jzlkk(hop=z+-8c7$l_m4npmc47add^(f^zdb+xccsp@nsyo')
 
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
@@ -64,19 +64,21 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Attendpay.wsgi.application'
 
 # ── Database ─────────────────────────────────────────────────────────────────
-# Uses DATABASE_URL env var in production (PostgreSQL on Supabase).
-# Falls back to local SQLite for development.
+# Production: set DATABASE_URL (Render PostgreSQL, Supabase, etc.) in the host dashboard.
+# Local dev: omit DATABASE_URL to use SQLite at Backend/db.sqlite3.
 DATABASE_URL = config('DATABASE_URL', default=None)
 
 if DATABASE_URL:
+    # Do not force sslmode=require — Render internal Postgres URLs often break with it.
+    # dj-database-url reads sslmode from the URL query string when present.
     DATABASES = {
-        'default': dj_database_url.parse(
-            DATABASE_URL,
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
             conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=False,
         )
     }
-    DATABASES['default'].setdefault('OPTIONS', {})
-    DATABASES['default']['OPTIONS']['sslmode'] = 'require'
 else:
     DATABASES = {
         'default': {
@@ -100,7 +102,8 @@ USE_TZ = True
 # ── Static files (WhiteNoise serves them in production) ──────────────────────
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Manifest storage fails deploys when static files are missing; use simple compression.
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

@@ -7,7 +7,7 @@ from datetime import date, timedelta
 
 from django.utils import timezone
 from django.contrib.auth import authenticate
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.db.models import Count, Q
 
 from rest_framework import status
@@ -35,6 +35,31 @@ from .qr_manager import get_or_create_daily_qr
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Health (for Render / uptime checks)
+# ─────────────────────────────────────────────────────────────────────────────
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
+    """GET /api/health/ — verifies DB connectivity and seed data."""
+    try:
+        user_count = Employee.objects.count()
+        return Response({
+            'status': 'ok',
+            'database': 'connected',
+            'employees': user_count,
+        })
+    except DatabaseError as exc:
+        return Response(
+            {
+                'status': 'error',
+                'database': 'unavailable',
+                'detail': str(exc) if request.GET.get('debug') == '1' else 'Database connection failed.',
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Auth
 # ─────────────────────────────────────────────────────────────────────────────
 @api_view(['POST'])
@@ -52,7 +77,14 @@ def login_view(request):
     employee_id = serializer.validated_data['employee_id'].upper()
     password    = serializer.validated_data['password']
 
-    user = authenticate(request, username=employee_id, password=password)
+    try:
+        user = authenticate(request, username=employee_id, password=password)
+    except DatabaseError:
+        return Response(
+            {'error': 'Database unavailable. Try again shortly.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
     if user is None:
         return Response({'error': 'Invalid Employee ID or password.'},
                         status=status.HTTP_401_UNAUTHORIZED)
@@ -68,7 +100,14 @@ def login_view(request):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    token, _ = Token.objects.get_or_create(user=user)
+    try:
+        token, _ = Token.objects.get_or_create(user=user)
+    except DatabaseError:
+        return Response(
+            {'error': 'Database unavailable. Try again shortly.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
     return Response({
         'token':           token.key,
         'employee_id':     user.employee_id,

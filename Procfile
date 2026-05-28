@@ -1,1 +1,1 @@
-web: python manage.py migrate --no-input && python manage.py seed_data && python manage.py collectstatic --no-input && gunicorn Attendpay.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+web: python manage.py migrate --no-input && python manage.py seed_data && python manage.py collectstatic --no-input --clear && gunicorn Attendpay.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120

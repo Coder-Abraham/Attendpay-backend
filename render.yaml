@@ -1,0 +1,25 @@
+# Render Blueprint – deploy from the Backend/ directory
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: attendpay-backend
+    runtime: python
+    rootDir: .
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input
+    startCommand: python manage.py migrate --no-input && python manage.py seed_data && gunicorn Attendpay.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    healthCheckPath: /api/health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.3"
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: attendpay-db
+          property: connectionString
+
+databases:
+  - name: attendpay-db
+    plan: free
